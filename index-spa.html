@@ -917,6 +917,11 @@
                   <span class="radio-custom"></span>
                   <span class="radio-text">Sec</span>
                 </label>
+                <label class="radio-option">
+                  <input type="radio" name="typeLivraison" value="Gel">
+                  <span class="radio-custom"></span>
+                  <span class="radio-text">Gel</span>
+                </label>
               </div>
             </div>
           </div>
@@ -2033,11 +2038,13 @@
       
       // Conserver la liste des véhicules et ajouter la sélection
       if (!sessionData.vehicules) sessionData.vehicules = [];
-      sessionData.vehiculesSelected = {
+      sessionData.selected = {
         tracteur: tracteur,
         remorque: remorque,
         commentaires: commentaires
       };
+      
+      console.log('🚛 Véhicules sélectionnés sauvegardés:', sessionData.selected);
       
       // Sauvegarder localement
       console.log('💾 sessionData avant sauvegarde:', sessionData);
@@ -2721,23 +2728,31 @@
         case 2:
           phase1Data.immatTracteur = document.getElementById('immatTracteur').value;
           phase1Data.degatsTracteur = document.querySelector('input[name="degatsTracteur"]:checked')?.value;
+          phase1Data.detailsDegatsTracteur = document.getElementById('detailsDegatsTracteur').value.trim();
           phase1Data.kilometrage = document.getElementById('kilometrage').value;
+          console.log('💬 Détails dégâts tracteur collectés:', phase1Data.detailsDegatsTracteur);
           break;
         case 3:
           phase1Data.commentairesTracteur = document.getElementById('commentairesTracteur').value.trim();
+          console.log('💬 Commentaire tracteur collecté:', phase1Data.commentairesTracteur);
           break;
         case 4:
           phase1Data.immatRemorque = document.getElementById('immatRemorque').value;
           phase1Data.degatsRemorque = document.querySelector('input[name="degatsRemorque"]:checked')?.value;
+          phase1Data.detailsDegatsRemorque = document.getElementById('detailsDegatsRemorque').value.trim();
           phase1Data.commentairesRemorque = document.getElementById('commentairesRemorque').value.trim();
+          console.log('💬 Détails dégâts remorque collectés:', phase1Data.detailsDegatsRemorque);
+          console.log('💬 Commentaire remorque collecté:', phase1Data.commentairesRemorque);
           break;
         case 5:
           phase1Data.chargementConforme = document.querySelector('input[name="chargementConforme"]:checked')?.value;
           phase1Data.commentairesChargement = document.getElementById('commentairesChargement').value.trim();
+          console.log('💬 Commentaire chargement collecté:', phase1Data.commentairesChargement);
           break;
         case 6:
           phase1Data.heureDepart = document.getElementById('heureDepart').value;
           phase1Data.commentairesFinaux = document.getElementById('commentairesFinaux').value.trim();
+          console.log('💬 Commentaire final collecté:', phase1Data.commentairesFinaux);
           updateFinalRecap();
           break;
       }

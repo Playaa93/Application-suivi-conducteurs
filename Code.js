@@ -115,7 +115,7 @@ function isHeadersMissing(sheet, sheetType) {
     
     switch(sheetType) {
       case 'Prise_Service':
-        return !firstRow.includes('Session_ID') || !firstRow.includes('Immat_Tracteur');
+        return !firstRow.includes('Session_ID') || !firstRow.includes('Immat_Tracteur') || !firstRow.includes('Details_Degats_Tracteur');
       case 'Suivi_Livraisons':
         return !firstRow.includes('Session_ID') || !firstRow.includes('Nom_Magasin') || !firstRow.includes('Commentaires_Livraison');
       case 'Fin_Service':
@@ -200,11 +200,11 @@ function createSheet(name) {
   // En-têtes selon le type de feuille
   switch(name) {
     case 'Prise_Service':
-      // ✅ 26 colonnes au total (corrigé aussi ici)
-      sheet.getRange(1, 1, 1, 26).setValues([[
+      // ✅ 28 colonnes au total (ajout Details_Degats)
+      sheet.getRange(1, 1, 1, 28).setValues([[
         'Session_ID', 'Timestamp', 'Tour', 'Site_Depart', 'Heure_Depart', 'Numero_Contrat',
-        'Immat_Tracteur', 'Degats_Tracteur', 'Kilometrage', 'Commentaires_Tracteur',
-        'Immat_Remorque', 'Degats_Remorque', 'Commentaires_Remorque',
+        'Immat_Tracteur', 'Degats_Tracteur', 'Details_Degats_Tracteur', 'Kilometrage', 'Commentaires_Tracteur',
+        'Immat_Remorque', 'Degats_Remorque', 'Details_Degats_Remorque', 'Commentaires_Remorque',
         'Consignes_Lu', 'Heure_Top_Depart',
         'Photo_Carburant', 'Photo_Face_Avant', 'Photo_Cote_Conducteur', 'Photo_Cote_Passager',
         'Photo_Carburant_Remorque', 'Photo_Hayon', 'Photo_Remorque_Tablier', 
@@ -420,10 +420,12 @@ function savePhase1ToSheetsWithUrls(data, photoUrls) {
       formData.numeroContrat || '',
       formData.immatTracteur || '',
       formData.degatsTracteur || '',
+      formData.detailsDegatsTracteur || '',
       formData.kilometrage || '',
       formData.commentairesTracteur || '',
       formData.immatRemorque || '',
       formData.degatsRemorque || '',
+      formData.detailsDegatsRemorque || '',
       formData.commentairesRemorque || '',
       formData.consignes ? 'Oui' : 'Non',
       formData.heureTopDepart || '',
@@ -1293,8 +1295,8 @@ function getConducteurInfo(codeConducteur) {
       console.log('❌ Codes disponibles:', allIds.join(', '));
       return {
         error: 'Conducteur non trouvé',
-        message: `Code ${codeConducteur} introuvable. Codes disponibles: ${allIds.join(', ')}`,
-        availableIds: allIds
+        message: `Code ${codeConducteur} introuvable. Veuillez vérifier votre code conducteur.`,
+        // availableIds supprimés pour sécurité
       };
     }
     
