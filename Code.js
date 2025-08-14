@@ -1278,21 +1278,12 @@ function getConducteurInfo(codeConducteur) {
     const data = conducteursSheet.getRange(2, 1, lastRow - 1, 8).getValues();
     console.log('📊 Nombre de conducteurs:', data.length);
     
-    // Debug: afficher tous les IDs disponibles
-    const allIds = data.map(row => row[0].toString());
-    console.log('🆔 IDs disponibles:', allIds);
-    
-    // Chercher le conducteur par ID avec debug
+    // Chercher le conducteur par ID (optimisé)
     console.log('🔍 Recherche de:', codeConducteur.toString());
-    const conducteurRow = data.find(row => {
-      const rowId = row[0].toString();
-      console.log('🔍 Comparaison:', rowId, '===', codeConducteur.toString(), '?', rowId === codeConducteur.toString());
-      return rowId === codeConducteur.toString();
-    });
+    const conducteurRow = data.find(row => row[0].toString() === codeConducteur.toString());
     
     if (!conducteurRow) {
       console.log('❌ Conducteur non trouvé:', codeConducteur);
-      console.log('❌ Codes disponibles:', allIds.join(', '));
       return {
         error: 'Conducteur non trouvé',
         message: `Code ${codeConducteur} introuvable. Veuillez vérifier votre code conducteur.`,
