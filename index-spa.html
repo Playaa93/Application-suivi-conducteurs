@@ -748,14 +748,25 @@
       background: var(--bg-tertiary);
     }
     
-    /* Inputs readonly - style spécial */
+    /* Inputs readonly - style spécial CRITIQUE */
+    input[readonly],
+    input[id="immatRemorque"],
+    input[id="immatTracteur"],
     .form-group input[readonly],
     .form-group textarea[readonly] {
       background: var(--bg-secondary) !important;
-      color: var(--text-secondary) !important;
-      border-color: var(--border-secondary) !important;
-      cursor: default;
-      opacity: 1; /* Forcer l'opacité */
+      color: var(--text-primary) !important;
+      border: 2px solid var(--border-secondary) !important;
+      border-radius: var(--radius-lg) !important;
+      padding: var(--spacing-lg) var(--spacing-md) !important;
+      font-size: 1rem !important;
+      font-family: 'Inter', sans-serif !important;
+      min-height: 48px !important;
+      width: 100% !important;
+      cursor: default !important;
+      opacity: 1 !important;
+      display: block !important;
+      visibility: visible !important;
     }
     
     /* Placeholder mobile-friendly */
@@ -2578,6 +2589,14 @@
       const phase1Data = JSON.parse(localStorage.getItem('phase1_data') || '{}');
       const sessionId = sessionData.sessionId;
       
+      // 🧹 NETTOYAGE PROACTIF localStorage
+      try {
+        localStorage.removeItem('phase0_data'); // Supprimer Phase 0 inutile
+        console.log('🧹 Phase 0 nettoyée du localStorage');
+      } catch (e) {
+        console.warn('⚠️ Erreur nettoyage Phase 0:', e);
+      }
+      
       if (phase1Data.photos) {
         uploadPhotosToGoogleDrive(phase1Data.photos, sessionId, 1)
           .then(results => {
@@ -2967,8 +2986,13 @@
         }
       }
       
-      // Sauvegarder sur Google Sheets
-      savePhase1ToBackend(phase1Data);
+      // 🚀 OPTIMISATION : Réduire appels backend
+      if (stepNumber === 1 || stepNumber === 6) {
+        console.log('☁️ Sauvegarde backend étape importante:', stepNumber);
+        savePhase1ToBackend(phase1Data);
+      } else {
+        console.log('💾 Sauvegarde locale seulement pour étape', stepNumber);
+      }
     }
     
     function updateFinalRecap() {
@@ -3741,7 +3765,12 @@ Continuer vers la fin de service ?`;
       
       // 🚀 NETTOYAGE LOCALSTORAGE pour éviter QuotaExceeded
       try {
+        // Nettoyage préventif AVANT sauvegarde
+        localStorage.removeItem('phase1_data'); // Phase 1 déjà uploadée
+        localStorage.removeItem('phase2_data'); // Phase 2 déjà sauvée
+        
         localStorage.setItem('phase3_data', JSON.stringify(phase3Data));
+        console.log('✅ Phase 3 sauvegardée avec nettoyage préventif');
       } catch (e) {
         console.warn('⚠️ localStorage plein - nettoyage Phase 3 sans photos');
         // Nettoyer les photos volumineuses des phases précédentes
@@ -3751,17 +3780,25 @@ Continuer vers la fin de service ?`;
             if (cleanData.photos[photoId].data) {
               delete cleanData.photos[photoId].data;
               cleanData.photos[photoId].storedOnServer = true;
+              console.log('🧹 Photo', photoId, 'nettoyée du localStorage');
             }
           });
         }
         try {
+          localStorage.clear(); // NETTOYAGE TOTAL
           localStorage.setItem('phase3_data', JSON.stringify(cleanData));
+          console.log('🧹 localStorage entièrement nettoyé et Phase 3 sauvée');
         } catch (e2) {
-          console.error('❌ Impossible de sauvegarder phase3_data - nettoyage localStorage');
-          // Nettoyage de secours
-          localStorage.removeItem('phase1_data');
-          localStorage.removeItem('phase2_data');
-          localStorage.setItem('phase3_data', JSON.stringify(cleanData));
+          console.error('❌ localStorage totalement saturé');
+          // Dernière tentative : données essentielles seulement
+          const essentialData = {
+            heureRetour: phase3Data.heureRetour,
+            kilometrageFinal: phase3Data.kilometrageFinal,
+            commentaires: phase3Data.commentaires
+          };
+          localStorage.clear();
+          localStorage.setItem('phase3_minimal', JSON.stringify(essentialData));
+          console.log('🆘 Sauvegarde minimale Phase 3 réussie');
         }
       }
     }
@@ -3789,14 +3826,14 @@ Continuer vers la fin de service ?`;
         return;
       }
       
-      // Sauvegarder les données finales
+      // 📷 UPLOAD PHOTOS AVANT NETTOYAGE localStorage
+      uploadPhase3Photos();
+      
+      // 💾 Sauvegarder les données finales APRÈS upload
       savePhase3Data();
       
-      // Sauvegarder sur Google Sheets
+      // ☁️ Sauvegarder sur Google Sheets
       savePhase3ToBackend(phase3Data);
-      
-      // Upload des photos Phase 3
-      uploadPhase3Photos();
       
       // Calculer les statistiques finales
       const sessionStorageData = JSON.parse(localStorage.getItem('sessionData') || '{}');
