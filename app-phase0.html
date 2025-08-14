@@ -1,0 +1,640 @@
+<script>
+// ========================================
+// 🚀 PHASE 0 - IDENTIFICATION & PRÉPARATIFS
+// ========================================
+
+let currentStep = 1;
+let sessionData = {};
+let conducteurData = null;
+let vehiculesDisponibles = [];
+
+// Initialisation de la phase 0
+window.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 Phase 0 - Identification & Préparatifs initialisée');
+  
+  // Initialiser la date du jour
+  initializeDate();
+  
+  // Initialiser l'heure actuelle
+  initializeTime();
+  
+  // Configurer les radio buttons cliquables
+  setupClickableRadios();
+  
+  // Récupérer les paramètres URL si retour d'une session
+  const urlParams = new URLSearchParams(window.location.search);
+  const existingSession = urlParams.get('session');
+  
+  if (existingSession) {
+    console.log('📱 Session existante détectée:', existingSession);
+    // Charger les données existantes si disponibles
+    loadExistingSession(existingSession);
+  }
+  
+  updateConnectionStatus();
+});
+
+// ========================================
+// 🔐 IDENTIFICATION CONDUCTEUR
+// ========================================
+
+function connectConducteur() {
+  const codeConducteur = document.getElementById('codeConducteur').value.trim();
+  
+  if (!codeConducteur || codeConducteur.length !== 4) {
+    showError('Veuillez saisir un code conducteur valide (4 chiffres)');
+    return;
+  }
+  
+  console.log('🔐 Connexion conducteur depuis Phase 0:', codeConducteur, 'Type:', typeof codeConducteur);
+  showLoading('Connexion en cours...');
+  
+  // Appel vers le backend pour récupérer les informations conducteur
+  google.script.run
+    .withSuccessHandler(function(result) {
+      console.log('🔐 Résultat connexion Phase 0:', result);
+      onConducteurLoaded(result);
+    })
+    .withFailureHandler(function(error) {
+      console.error('🔐 Erreur connexion Phase 0:', error);
+      onConducteurError(error);
+    })
+    .getConducteurInfo(codeConducteur);
+}
+
+function onConducteurLoaded(result) {
+  hideLoading();
+  
+  if (!result) {
+    showError('Code conducteur introuvable. Vérifiez votre code.');
+    return;
+  }
+  
+  // Gérer les erreurs spécifiques
+  if (result.error) {
+    console.log('❌ Erreur reçue:', result);
+    
+    if (result.error === 'Conducteur inactif') {
+      showError('🚫 Compte conducteur désactivé\n\n' + result.message + '\n\nContactez votre responsable pour réactiver votre compte.');
+    } else if (result.availableIds && result.availableIds.length > 0) {
+      showError(result.message + '\n\nCodes disponibles à tester: ' + result.availableIds.slice(0, 5).join(', '));
+    } else {
+      showError(result.message || 'Erreur de connexion conducteur');
+    }
+    return;
+  }
+  
+  if (!result.conducteur) {
+    showError('Code conducteur introuvable. Vérifiez votre code.');
+    return;
+  }
+  
+  conducteurData = result.conducteur;
+  vehiculesDisponibles = result.vehicules || [];
+  
+  console.log('✅ Conducteur connecté:', conducteurData);
+  console.log('🚛 Véhicules disponibles:', vehiculesDisponibles.length);
+  
+  // Afficher les informations conducteur
+  displayConducteurInfo();
+  
+  // Passer automatiquement à l'étape suivante
+  setTimeout(() => {
+    nextStep();
+  }, 1500);
+}
+
+function onConducteurError(error) {
+  hideLoading();
+  console.error('❌ Erreur connexion conducteur:', error);
+  showError('Erreur de connexion. Vérifiez votre code et réessayez.');
+}
+
+function displayConducteurInfo() {
+  const infoDiv = document.getElementById('conducteurInfo');
+  const detailsDiv = document.getElementById('conducteurDetails');
+  
+  detailsDiv.innerHTML = `
+    <div class="detail-row">
+      <span class="detail-label">Nom :</span>
+      <span class="detail-value">${conducteurData.nom} ${conducteurData.prenom}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Site d'affectation :</span>
+      <span class="detail-value">${conducteurData.site}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Email :</span>
+      <span class="detail-value">${conducteurData.email}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Statut :</span>
+      <span class="detail-value status-actif">${conducteurData.statut}</span>
+    </div>
+  `;
+  
+  infoDiv.style.display = 'block';
+}
+
+// ========================================
+// 🚛 GESTION VÉHICULES
+// ========================================
+
+function loadVehicules() {
+  if (!conducteurData || !vehiculesDisponibles.length) {
+    console.log('⚠️ Pas de données véhicules disponibles');
+    return;
+  }
+  
+  // Filtrer les tracteurs par site
+  const tracteurs = vehiculesDisponibles.filter(v => 
+    v.type === 'Tracteur' && 
+    v.site === conducteurData.site && 
+    v.statut === 'Disponible'
+  );
+  
+  const tracteurSelect = document.getElementById('tracteurSelect');
+  tracteurSelect.innerHTML = '<option value="">Sélectionner un tracteur...</option>';
+  
+  tracteurs.forEach(tracteur => {
+    const option = document.createElement('option');
+    option.value = tracteur.immatriculation;
+    option.textContent = `${tracteur.immatriculation} (${tracteur.kilometrage} km)`;
+    option.dataset.tracteur = JSON.stringify(tracteur);
+    tracteurSelect.appendChild(option);
+  });
+  
+  // Écouter les changements de tracteur pour charger les remorques
+  tracteurSelect.addEventListener('change', loadRemorques);
+  
+  console.log('🚛 Tracteurs chargés:', tracteurs.length);
+}
+
+function loadRemorques() {
+  const typeLivraison = document.querySelector('input[name="typeLivraison"]:checked')?.value;
+  
+  if (!typeLivraison) {
+    showError('Veuillez sélectionner le type de livraison avant de choisir une remorque');
+    return;
+  }
+  
+  // Filtrer les remorques compatibles
+  let remorques = vehiculesDisponibles.filter(v => 
+    v.type === 'Remorque' && 
+    v.site === conducteurData.site && 
+    v.statut === 'Disponible'
+  );
+  
+  // Ajouter les options spéciales
+  const remorqueSelect = document.getElementById('remorqueSelect');
+  remorqueSelect.innerHTML = `
+    <option value="">Sélectionner une remorque...</option>
+    <option value="Remorque client">Remorque client</option>
+    <option value="Porteur">Porteur</option>
+  `;
+  
+  remorques.forEach(remorque => {
+    const option = document.createElement('option');
+    option.value = remorque.immatriculation;
+    option.textContent = remorque.immatriculation;
+    option.dataset.remorque = JSON.stringify(remorque);
+    remorqueSelect.appendChild(option);
+  });
+  
+  // Écouter les changements pour mettre à jour le résumé
+  remorqueSelect.addEventListener('change', updateVehiculesSummary);
+  
+  console.log('🚚 Remorques chargées:', remorques.length + 2);
+}
+
+function updateVehiculesSummary() {
+  const tracteurSelect = document.getElementById('tracteurSelect');
+  const remorqueSelect = document.getElementById('remorqueSelect');
+  
+  if (!tracteurSelect.value || !remorqueSelect.value) {
+    return;
+  }
+  
+  const summaryDiv = document.getElementById('selectedVehicules');
+  summaryDiv.innerHTML = `
+    <div class="summary-row">
+      <span class="summary-label">Tracteur :</span>
+      <span class="summary-value">${tracteurSelect.value}</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Remorque :</span>
+      <span class="summary-value">${remorqueSelect.value}</span>
+    </div>
+  `;
+  
+  document.getElementById('vehiculesSummary').style.display = 'block';
+}
+
+// ========================================
+// 🏗️ GESTION DES ÉTAPES
+// ========================================
+
+function nextStep() {
+  if (!validateCurrentStep()) {
+    return;
+  }
+  
+  // Sauvegarder les données de l'étape courante
+  saveCurrentStepData();
+  
+  // Masquer l'étape courante
+  document.getElementById(`step${currentStep}`).classList.remove('active');
+  
+  // Passer à l'étape suivante
+  currentStep++;
+  
+  // Afficher la nouvelle étape
+  const nextStepElement = document.getElementById(`step${currentStep}`);
+  if (nextStepElement) {
+    nextStepElement.classList.add('active');
+    
+    // Actions spécifiques selon l'étape
+    if (currentStep === 3) {
+      loadVehicules();
+    } else if (currentStep === 4) {
+      generateRecapitulatif();
+    }
+    
+    // Mise à jour de la barre de progression
+    updateProgressBar();
+  }
+}
+
+function prevStep() {
+  if (currentStep <= 1) return;
+  
+  // Masquer l'étape courante
+  document.getElementById(`step${currentStep}`).classList.remove('active');
+  
+  // Revenir à l'étape précédente
+  currentStep--;
+  
+  // Afficher l'étape précédente
+  document.getElementById(`step${currentStep}`).classList.add('active');
+  
+  // Mise à jour de la barre de progression
+  updateProgressBar();
+}
+
+function updateProgressBar() {
+  const progressFill = document.querySelector('.progress-fill');
+  const progress = (currentStep / 4) * 100;
+  progressFill.style.width = `${Math.min(progress, 100)}%`;
+}
+
+// ========================================
+// ✅ VALIDATION
+// ========================================
+
+function validateCurrentStep() {
+  switch(currentStep) {
+    case 1:
+      return validateStep1();
+    case 2:
+      return validateStep2();
+    case 3:
+      return validateStep3();
+    default:
+      return true;
+  }
+}
+
+function validateStep1() {
+  if (!conducteurData) {
+    showError('Veuillez vous connecter avec votre code conducteur');
+    return false;
+  }
+  return true;
+}
+
+function validateStep2() {
+  const required = ['dateTournee', 'heureDepartPrevue'];
+  const radios = ['typeTour', 'cycleTravail', 'typeLivraison'];
+  
+  // Vérifier les champs requis
+  for (let field of required) {
+    const element = document.getElementById(field);
+    if (!element.value.trim()) {
+      showError(`Le champ "${element.previousElementSibling.textContent}" est requis`);
+      element.focus();
+      return false;
+    }
+  }
+  
+  // Vérifier les boutons radio
+  for (let radio of radios) {
+    if (!document.querySelector(`input[name="${radio}"]:checked`)) {
+      showError(`Veuillez sélectionner une option pour "${radio}"`);
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+function validateStep3() {
+  const tracteur = document.getElementById('tracteurSelect').value;
+  const remorque = document.getElementById('remorqueSelect').value;
+  
+  if (!tracteur) {
+    showError('Veuillez sélectionner un tracteur');
+    return false;
+  }
+  
+  if (!remorque) {
+    showError('Veuillez sélectionner une remorque');
+    return false;
+  }
+  
+  return true;
+}
+
+// ========================================
+// 💾 SAUVEGARDE DONNÉES
+// ========================================
+
+function saveCurrentStepData() {
+  switch(currentStep) {
+    case 2:
+      sessionData.tournee = {
+        date: document.getElementById('dateTournee').value,
+        heure: document.getElementById('heureDepartPrevue').value,
+        typeTour: document.querySelector('input[name="typeTour"]:checked').value,
+        cycle: document.querySelector('input[name="cycleTravail"]:checked').value,
+        typeLivraison: document.querySelector('input[name="typeLivraison"]:checked').value,
+        magasinsPrevu: document.getElementById('magasinsPrevu').value.trim()
+      };
+      break;
+      
+    case 3:
+      sessionData.vehicules = {
+        tracteur: document.getElementById('tracteurSelect').value,
+        remorque: document.getElementById('remorqueSelect').value
+      };
+      break;
+  }
+  
+  // Toujours inclure les données conducteur
+  if (conducteurData) {
+    sessionData.conducteur = conducteurData;
+  }
+  
+  console.log('💾 Données session mises à jour:', sessionData);
+}
+
+// ========================================
+// 📋 RÉCAPITULATIF
+// ========================================
+
+function generateRecapitulatif() {
+  // Sauvegarder les données finales
+  saveCurrentStepData();
+  
+  // Générer l'ID de session
+  const sessionId = generateSessionId();
+  sessionData.sessionId = sessionId;
+  
+  document.getElementById('generatedSessionId').textContent = sessionId;
+  
+  // Remplir le récapitulatif
+  document.getElementById('summaryCondutreur').innerHTML = `
+    <div class="summary-row">
+      <span class="summary-label">Nom :</span>
+      <span class="summary-value">${conducteurData.nom} ${conducteurData.prenom}</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Site :</span>
+      <span class="summary-value">${conducteurData.site}</span>
+    </div>
+  `;
+  
+  document.getElementById('summaryTournee').innerHTML = `
+    <div class="summary-row">
+      <span class="summary-label">Date :</span>
+      <span class="summary-value">${formatDate(sessionData.tournee.date)}</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Heure :</span>
+      <span class="summary-value">${sessionData.tournee.heure}</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Tour :</span>
+      <span class="summary-value">${sessionData.tournee.typeTour}</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Cycle :</span>
+      <span class="summary-value">${sessionData.tournee.cycle}</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Type :</span>
+      <span class="summary-value">${sessionData.tournee.typeLivraison}</span>
+    </div>
+  `;
+  
+  document.getElementById('summaryVehicules').innerHTML = `
+    <div class="summary-row">
+      <span class="summary-label">Tracteur :</span>
+      <span class="summary-value">${sessionData.vehicules.tracteur}</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Remorque :</span>
+      <span class="summary-value">${sessionData.vehicules.remorque}</span>
+    </div>
+  `;
+}
+
+// ========================================
+// 🚀 DÉMARRAGE PHASE 1
+// ========================================
+
+function startPhase1() {
+  console.log('🚛 Démarrage Phase 1 avec session:', sessionData.sessionId);
+  
+  // Sauvegarder les données dans localStorage pour les phases suivantes
+  localStorage.setItem('phase0_data', JSON.stringify(sessionData));
+  localStorage.setItem('currentSessionId', sessionData.sessionId);
+  
+  showLoading('Initialisation de la Prise de Service...');
+  
+  // Envoyer les données de Phase 0 au backend
+  google.script.run
+    .withSuccessHandler(onPhase0Saved)
+    .withFailureHandler(onPhase0Error)
+    .savePhase0Data(sessionData);
+}
+
+function onPhase0Saved(result) {
+  hideLoading();
+  console.log('✅ Phase 0 sauvegardée:', result);
+  
+  // Redirection vers Phase 1
+  const baseUrl = getCorrectBaseUrl();
+  const phase1Url = `${baseUrl}?phase=1&session=${sessionData.sessionId}`;
+  
+  console.log('🚛 Redirection vers Phase 1:', phase1Url);
+  window.location.href = phase1Url;
+}
+
+function onPhase0Error(error) {
+  hideLoading();
+  console.error('❌ Erreur sauvegarde Phase 0:', error);
+  showError('Erreur lors de la sauvegarde. Réessayez ou contactez le support.');
+}
+
+// ========================================
+// 🛠️ FONCTIONS UTILITAIRES
+// ========================================
+
+function initializeDate() {
+  const today = new Date();
+  const dateString = today.toISOString().split('T')[0];
+  document.getElementById('dateTournee').value = dateString;
+}
+
+function initializeTime() {
+  const now = new Date();
+  // Arrondir à la demi-heure suivante
+  const minutes = now.getMinutes();
+  const roundedMinutes = minutes < 30 ? 30 : 0;
+  const hour = roundedMinutes === 0 ? now.getHours() + 1 : now.getHours();
+  
+  const timeString = `${hour.toString().padStart(2, '0')}:${roundedMinutes.toString().padStart(2, '0')}`;
+  
+  // Attendre que l'élément soit disponible
+  setTimeout(() => {
+    const timeInput = document.getElementById('heureDepartPrevue');
+    if (timeInput) {
+      timeInput.value = timeString;
+    }
+  }, 100);
+}
+
+function setupClickableRadios() {
+  // Gérer les clics sur toute la ligne des radio buttons
+  document.addEventListener('click', function(e) {
+    const radioItem = e.target.closest('.radio-item');
+    if (radioItem) {
+      const radioInput = radioItem.querySelector('input[type="radio"]');
+      if (radioInput && !radioInput.checked) {
+        radioInput.checked = true;
+        
+        // Déclencher l'événement change
+        radioInput.dispatchEvent(new Event('change', { bubbles: true }));
+        
+        // Mise à jour visuelle
+        updateRadioVisualState(radioInput);
+        
+        console.log('📻 Radio sélectionné:', radioInput.value);
+      }
+    }
+  });
+  
+  // Gérer les changements de radio pour la mise à jour visuelle
+  document.addEventListener('change', function(e) {
+    if (e.target.type === 'radio') {
+      updateRadioVisualState(e.target);
+    }
+  });
+}
+
+function updateRadioVisualState(changedRadio) {
+  // Retirer la classe selected de tous les radio-items du même groupe
+  const radioName = changedRadio.name;
+  const allRadiosInGroup = document.querySelectorAll(`input[name="${radioName}"]`);
+  
+  allRadiosInGroup.forEach(radio => {
+    const radioItem = radio.closest('.radio-item');
+    if (radioItem) {
+      radioItem.classList.remove('selected');
+    }
+  });
+  
+  // Ajouter la classe selected au radio-item sélectionné
+  const selectedRadioItem = changedRadio.closest('.radio-item');
+  if (selectedRadioItem) {
+    selectedRadioItem.classList.add('selected');
+  }
+}
+
+function generateSessionId() {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `PS_${timestamp}_${random}`;
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('fr-FR');
+}
+
+function getCorrectBaseUrl() {
+  const currentUrl = window.location.href;
+  
+  if (currentUrl.includes('userCodeAppPanel')) {
+    return 'https://script.google.com/macros/s/AKfycbzm4fmWu41vXRFJLnJQSWXNlGxxDwhue73q0rDVjV1xsk-rl47vE1kq0tLep1Q2nz3D/exec';
+  } else {
+    return currentUrl.split('?')[0];
+  }
+}
+
+function loadExistingSession(sessionId) {
+  console.log('📱 Chargement session existante:', sessionId);
+  // TODO: Implémenter le chargement des données existantes
+}
+
+// Navigation vers l'accueil
+function goToHome() {
+  if (confirm('🏠 Retourner à l\'accueil ?\n\nLes données de préparation seront perdues.')) {
+    const homeUrl = getCorrectBaseUrl();
+    window.location.href = homeUrl;
+  }
+}
+
+// ========================================
+// 🔌 GESTION CONNEXION
+// ========================================
+
+function updateConnectionStatus() {
+  const statusElement = document.getElementById('connectionStatus');
+  if (navigator.onLine) {
+    statusElement.className = 'offline-indicator online';
+    statusElement.textContent = '🟢 En ligne';
+  } else {
+    statusElement.className = 'offline-indicator offline';
+    statusElement.textContent = '🔴 Hors ligne';
+  }
+}
+
+function showLoading(message = 'Chargement...') {
+  // Simple loading indication
+  const button = event?.target;
+  if (button) {
+    button.disabled = true;
+    button.textContent = message;
+  }
+}
+
+function hideLoading() {
+  // Reset buttons
+  const buttons = document.querySelectorAll('button[disabled]');
+  buttons.forEach(button => {
+    button.disabled = false;
+    // Restore original text based on context
+  });
+}
+
+function showError(message) {
+  alert('❌ ' + message);
+}
+
+// Écouteurs d'événements pour la connexion
+window.addEventListener('online', updateConnectionStatus);
+window.addEventListener('offline', updateConnectionStatus);
+
+console.log('🚀 Phase 0 - JavaScript chargé et prêt');
+</script>

@@ -1,0 +1,573 @@
+<script>
+// Variables globales
+let currentStep = 1;
+let totalSteps = 12; // ✅ CHANGÉ de 6 à 12
+let formData = {};
+let photos = {};
+let pendingSync = 0;
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 App initialisée');
+  updateConnectionStatus();
+  updateProgressBar();
+  initializeEventListeners();
+  checkPendingData();
+});
+
+// Navigation
+function nextStep() {
+  console.log(`🚀 Tentative passage à l'étape suivante depuis ${currentStep}`);
+  
+  if (validateCurrentStep()) {
+    console.log(`✅ Validation réussie pour étape ${currentStep}`);
+    saveCurrentStepData();
+    
+    if (currentStep < totalSteps) {
+      const currentStepEl = document.getElementById(`step${currentStep}`);
+      const nextStepEl = document.getElementById(`step${currentStep + 1}`);
+      
+      console.log(`🔄 Transition: étape ${currentStep} → ${currentStep + 1}`);
+      console.log(`Current step element:`, currentStepEl ? 'TROUVÉ' : 'MANQUANT');
+      console.log(`Next step element:`, nextStepEl ? 'TROUVÉ' : 'MANQUANT');
+      
+      if (currentStepEl) currentStepEl.classList.remove('active');
+      currentStep++;
+      if (nextStepEl) nextStepEl.classList.add('active');
+      
+      updateProgressBar();
+      window.scrollTo(0, 0);
+      
+      console.log(`✅ Navigation terminée, étape actuelle: ${currentStep}`);
+    } else {
+      console.log(`🏁 Dernière étape atteinte (${currentStep}/${totalSteps})`);
+    }
+  } else {
+    console.log(`❌ Validation échouée pour étape ${currentStep}`);
+  }
+}
+
+function prevStep() {
+  if (currentStep > 1) {
+    document.getElementById(`step${currentStep}`).classList.remove('active');
+    currentStep--;
+    document.getElementById(`step${currentStep}`).classList.add('active');
+    updateProgressBar();
+    window.scrollTo(0, 0);
+  }
+}
+
+function updateProgressBar() {
+  const progressFill = document.querySelector('.progress-fill');
+  const progressBar = document.querySelector('.progress-bar');
+  const percentage = (currentStep / totalSteps) * 100;
+  
+  console.log(`🔄 Mise à jour barre de progression: étape ${currentStep}/${totalSteps} = ${percentage.toFixed(1)}%`);
+  
+  if (progressFill) {
+    progressFill.style.width = percentage + '%';
+  }
+  
+  if (progressBar) {
+    progressBar.setAttribute('aria-valuenow', percentage.toFixed(0));
+  }
+}
+
+// Validation
+function validateCurrentStep() {
+  console.log(`🔍 Validation de l'étape ${currentStep}`);
+  const currentStepEl = document.getElementById(`step${currentStep}`);
+  
+  if (!currentStepEl) {
+    console.error(`❌ Élément step${currentStep} introuvable`);
+    return false;
+  }
+  
+  const requiredInputs = currentStepEl.querySelectorAll('[required]');
+  console.log(`🔍 ${requiredInputs.length} champs obligatoires trouvés`);
+  
+  for (let input of requiredInputs) {
+    const value = input.value ? input.value.trim() : '';
+    console.log(`🔍 Validation ${input.id || input.name}: "${value}"`);
+    
+    if (!value) {
+      const label = input.closest('.input-group')?.querySelector('label')?.textContent || 'Champ inconnu';
+      console.log(`❌ Champ vide: ${label}`);
+      alert(`Le champ "${label}" est obligatoire`);
+      input.focus();
+      return false;
+    }
+  }
+  
+  console.log(`✅ Tous les champs obligatoires sont remplis`);
+  
+  // Validation des radio buttons obligatoires
+  const radioGroups = currentStepEl.querySelectorAll('input[type="radio"][required]');
+  const radioGroupNames = [...new Set([...radioGroups].map(r => r.name))];
+  
+  for (let groupName of radioGroupNames) {
+    const checkedRadio = currentStepEl.querySelector(`input[name="${groupName}"]:checked`);
+    if (!checkedRadio) {
+      console.log(`❌ Groupe radio non sélectionné: ${groupName}`);
+      alert(`Veuillez sélectionner une option pour "${groupName}"`);
+      return false;
+    }
+  }
+  
+  // ✅ CORRECTION : Validations photos par étape avec debug
+  switch(currentStep) {
+    case 2: // Tracteur
+      console.log('🔍 Validation étape 2, photos:', Object.keys(photos));
+      if (!photos.carburant) {
+        alert('La photo de la jauge carburant est obligatoire');
+        return false;
+      }
+      break;
+      
+    case 3: // Photos tracteur  
+      console.log('🔍 Validation étape 3, photos:', Object.keys(photos));
+      if (!photos.faceAvant || !photos.coteConducteur || !photos.cotePassager) {
+        const manquantes = [];
+        if (!photos.faceAvant) manquantes.push('face avant');
+        if (!photos.coteConducteur) manquantes.push('côté conducteur');
+        if (!photos.cotePassager) manquantes.push('côté passager');
+        alert(`Photos manquantes: ${manquantes.join(', ')}`);
+        return false;
+      }
+      break;
+      
+    case 6: // Chargement
+      console.log('🔍 Validation étape 6, photos:', Object.keys(photos));
+      if (!photos.chargement || !photos.remorquePortes) {
+        alert('Les photos du chargement et des portes sont obligatoires');
+        return false;
+      }
+      break;
+
+      // ✅ AJOUTER ces validations après le case 6
+case 8: // Magasin 1
+  if (!photos.magasin1Photo) {
+    alert('La photo du magasin 1 est obligatoire');
+    return false;
+  }
+  break;
+  
+case 9: // Magasin 2  
+  if (!photos.magasin2Photo) {
+    alert('La photo du magasin 2 est obligatoire');
+    return false;
+  }
+  break;
+  
+case 10: // Magasin 3
+  if (!photos.magasin3Photo) {
+    alert('La photo du magasin 3 est obligatoire');
+    return false;
+  }
+  break;
+  
+case 12: // Fin de service
+  if (!photos.pdaReprises || !photos.caisseVides || !photos.lettreVoiture || !photos.caisseNettoyee || !photos.carburantFin) {
+    alert('Toutes les photos de fin de service sont obligatoires');
+    return false;
+  }
+  break;
+  }
+  
+  return true;
+}
+
+function saveCurrentStepData() {
+  const currentStepEl = document.getElementById(`step${currentStep}`);
+  const inputs = currentStepEl.querySelectorAll('input, select, textarea');
+  
+  inputs.forEach(input => {
+    if (input.type === 'radio') {
+      if (input.checked) {
+        formData[input.name] = input.value;
+      }
+    } else if (input.type === 'checkbox') {
+      if (!formData[input.name]) formData[input.name] = [];
+      if (input.checked && !formData[input.name].includes(input.value)) {
+        formData[input.name].push(input.value);
+      }
+    } else if (input.id) {
+      formData[input.id] = input.value;
+    }
+  });
+}
+
+// ✅ CORRECTION : Gestion photos améliorée
+function takePhoto(photoType) {
+  console.log('📸 Tentative prise de photo:', photoType);
+  
+  // ✅ Construction correcte de l'ID
+  const inputId = `photo${photoType.charAt(0).toUpperCase() + photoType.slice(1)}`;
+  const input = document.getElementById(inputId);
+  
+  console.log('🔍 Recherche input:', inputId, input ? 'TROUVÉ' : 'INTROUVABLE');
+  
+  if (input) {
+    input.click();
+    console.log('✅ Click déclenché sur input');
+  } else {
+    console.error('❌ Input non trouvé:', inputId);
+    alert(`Erreur: Input ${inputId} non trouvé`);
+  }
+}
+
+function initializeEventListeners() {
+  // ✅ CORRECTION : Photos avec debug détaillé
+  const photoInputs = document.querySelectorAll('input[type="file"]');
+  console.log('🔍 Inputs photo trouvés:', photoInputs.length);
+  
+  photoInputs.forEach((input, index) => {
+    console.log(`🔍 Input ${index}:`, input.id);
+    
+    input.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      console.log('📸 Fichier sélectionné:', file ? file.name : 'AUCUN');
+      
+      if (file) {
+        // ✅ CORRECTION : Extraction correcte du type de photo
+        const photoType = extractPhotoType(this.id);
+        console.log('🎯 Type photo extrait:', photoType);
+        processPhoto(file, photoType);
+      }
+    });
+  });
+  
+  // Radio buttons
+  const radioInputs = document.querySelectorAll('input[type="radio"]');
+  radioInputs.forEach(input => {
+    input.addEventListener('change', function() {
+      updateRadioDisplay(this.name);
+    });
+  });
+  
+  // Checkboxes
+  const checkboxInputs = document.querySelectorAll('input[type="checkbox"]');
+  checkboxInputs.forEach(input => {
+    input.addEventListener('change', function() {
+      updateCheckboxDisplay(this);
+    });
+  });
+}
+
+// ✅ NOUVELLE FONCTION : Extraction propre du type de photo
+function extractPhotoType(inputId) {
+  // Mapping direct pour éviter les erreurs de casse
+  const photoMapping = {
+    'photoCarburant': 'carburant',
+    'photoFaceAvant': 'faceAvant',
+    'photoCoteConducteur': 'coteConducteur',
+    'photoCotePassager': 'cotePassager',
+    'photoCarburantRemorque': 'carburantRemorque',
+    'photoHayon': 'hayon',
+    'photoRemorqueTablier': 'remorqueTablier',
+    'photoRemorqueConducteur': 'remorqueConducteur',
+    'photoRemorquePassager': 'remorquePassager',
+    'photoChargement': 'chargement',
+    'photoRemorquePortes': 'remorquePortes'
+  };
+  
+  return photoMapping[inputId] || inputId.replace('photo', '');
+}
+
+function processPhoto(file, photoType) {
+  console.log('🔄 Traitement photo:', photoType, file.name, `${(file.size/1024/1024).toFixed(2)}MB`);
+  
+  if (file.size > 10 * 1024 * 1024) {
+    alert('La photo est trop voluminieuse (max 10MB)');
+    return;
+  }
+  
+  compressImage(file, (compressedFile) => {
+    console.log('✅ Compression terminée:', `${(compressedFile.size/1024/1024).toFixed(2)}MB`);
+    
+    // ✅ CORRECTION : Preview avec ID exact
+    const previewId = `preview${photoType.charAt(0).toUpperCase() + photoType.slice(1)}`;
+    const preview = document.getElementById(previewId);
+    
+    console.log('🔍 Recherche preview:', previewId, preview ? 'TROUVÉ' : 'INTROUVABLE');
+    
+    if (preview) {
+      preview.src = URL.createObjectURL(compressedFile);
+      preview.style.display = 'block';
+      console.log('✅ Preview affiché');
+    }
+    
+    // ✅ CORRECTION : Interface update avec sélecteur plus robuste
+    const photoInput = document.querySelector(`[onclick*="${photoType}"]`);
+    console.log('🔍 Photo input container:', photoInput ? 'TROUVÉ' : 'INTROUVABLE');
+    
+    if (photoInput) {
+      photoInput.classList.add('has-photo');
+      const textElement = photoInput.querySelector('.photo-text');
+      if (textElement) {
+        textElement.textContent = '✅ Photo capturée';
+        console.log('✅ Texte mis à jour');
+      }
+    }
+    
+    // ✅ Stocker la photo
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      photos[photoType] = {
+        data: e.target.result.split(',')[1],
+        type: compressedFile.type,
+        name: `${photoType}_${Date.now()}.jpg`,
+        size: compressedFile.size
+      };
+      
+      console.log('💾 Photo stockée:', photoType);
+      console.log('📊 Photos actuelles:', Object.keys(photos));
+    };
+    reader.readAsDataURL(compressedFile);
+  });
+}
+
+function compressImage(file, callback) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  
+  img.onload = function() {
+    const maxSize = 1200;
+    let { width, height } = img;
+    
+    if (width > height && width > maxSize) {
+      height = (height * maxSize) / width;
+      width = maxSize;
+    } else if (height > maxSize) {
+      width = (width * maxSize) / height;
+      height = maxSize;
+    }
+    
+    canvas.width = width;
+    canvas.height = height;
+    ctx.drawImage(img, 0, 0, width, height);
+    canvas.toBlob(callback, 'image/jpeg', 0.8);
+  };
+  
+  img.src = URL.createObjectURL(file);
+}
+
+function updateRadioDisplay(name) {
+  const radios = document.querySelectorAll(`input[name="${name}"]`);
+  radios.forEach(radio => {
+    const container = radio.closest('.radio-item');
+    if (container) {
+      if (radio.checked) {
+        container.classList.add('selected');
+      } else {
+        container.classList.remove('selected');
+      }
+    }
+  });
+}
+
+function updateCheckboxDisplay(checkbox) {
+  const container = checkbox.closest('.checkbox-item');
+  if (container) {
+    if (checkbox.checked) {
+      container.classList.add('selected');
+    } else {
+      container.classList.remove('selected');
+    }
+  }
+}
+
+// Connexion
+function updateConnectionStatus() {
+  const indicator = document.getElementById('connectionStatus');
+  if (navigator.onLine) {
+    indicator.innerHTML = '🟢 En ligne';
+    indicator.className = 'offline-indicator online';
+    if (pendingSync > 0) syncOfflineData();
+  } else {
+    indicator.innerHTML = '🔴 Hors ligne';
+    indicator.className = 'offline-indicator offline';
+  }
+}
+
+function checkPendingData() {
+  const offlineData = JSON.parse(localStorage.getItem('offlineData') || '[]');
+  pendingSync = offlineData.length;
+  if (pendingSync > 0) {
+    const indicator = document.getElementById('pendingIndicator');
+    if (indicator) {
+      indicator.innerHTML = `📤 ${pendingSync} formulaire(s) en attente`;
+      indicator.style.display = 'block';
+    }
+  }
+}
+
+// Events connexion
+window.addEventListener('online', updateConnectionStatus);
+window.addEventListener('offline', updateConnectionStatus);
+
+// Soumission
+function submitForm() {
+  console.log('📝 Soumission formulaire...');
+  console.log('📊 Photos disponibles:', Object.keys(photos));
+  
+  if (!validateCurrentStep()) return;
+  
+  saveCurrentStepData();
+  formData.timestamp = new Date().toISOString();
+  formData.photos = photos;
+  formData.photosCount = Object.keys(photos).length;
+  
+  console.log('📋 Données finales:', {
+    fieldsCount: Object.keys(formData).length,
+    photosCount: formData.photosCount
+  });
+  
+  const submitBtn = document.querySelector('.btn-success');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="loading"></span> Envoi en cours...';
+  
+  if (navigator.onLine) {
+    saveToServer();
+  } else {
+    saveOffline();
+  }
+}
+
+function saveToServer() {
+  console.log('☁️ Sauvegarde serveur...');
+  google.script.run
+    .withSuccessHandler(onSaveSuccess)
+    .withFailureHandler(onSaveError)
+    .saveFormData(formData);
+}
+
+function saveOffline() {
+  console.log('💾 Sauvegarde hors ligne...');
+  try {
+    let offlineData = JSON.parse(localStorage.getItem('offlineData') || '[]');
+    offlineData.push(formData);
+    localStorage.setItem('offlineData', JSON.stringify(offlineData));
+    pendingSync++;
+    showSuccessMessage('✅ Sauvegardé hors ligne', 'Sera synchronisé à la reconnexion');
+  } catch (error) {
+    console.error('❌ Erreur sauvegarde offline:', error);
+    alert('Erreur sauvegarde hors ligne: ' + error.message);
+  }
+}
+
+function syncOfflineData() {
+  const offlineData = JSON.parse(localStorage.getItem('offlineData') || '[]');
+  if (offlineData.length > 0 && navigator.onLine) {
+    console.log(`🔄 Synchronisation ${offlineData.length} formulaire(s)...`);
+    google.script.run
+      .withSuccessHandler(() => {
+        console.log('✅ Synchronisation réussie');
+        localStorage.removeItem('offlineData');
+        pendingSync = 0;
+        const indicator = document.getElementById('pendingIndicator');
+        if (indicator) indicator.style.display = 'none';
+      })
+      .withFailureHandler((error) => {
+        console.error('❌ Erreur synchronisation:', error);
+      })
+      .syncOfflineData(offlineData);
+  }
+}
+
+function onSaveSuccess(result) {
+  console.log('✅ Sauvegarde réussie:', result);
+  showSuccessMessage('🎉 Formulaire envoyé !', 'Prise de service enregistrée avec succès');
+}
+
+function onSaveError(error) {
+  console.error('❌ Erreur serveur:', error);
+  saveOffline();
+}
+
+function showSuccessMessage(title, details) {
+  document.querySelectorAll('.step').forEach(step => step.style.display = 'none');
+  const container = document.querySelector('.form-container');
+  container.innerHTML = `
+    <div class="success-message">
+      <div class="success-icon">🎉</div>
+      <h2 class="success-title">${title}</h2>
+      <p class="success-details">${details}</p>
+      <button class="btn btn-primary" onclick="location.reload()">📝 Nouveau formulaire</button>
+    </div>
+  `;
+}
+
+// ✅ NOUVELLE FONCTION : Debug photos
+function debugPhotos() {
+  console.log('🔍 DEBUG PHOTOS:');
+  console.log('📊 Photos stockées:', Object.keys(photos));
+  console.log('📋 Détail photos:', photos);
+  
+  // Vérifier les inputs
+  const inputs = document.querySelectorAll('input[type="file"]');
+  console.log('🔍 Inputs trouvés:', Array.from(inputs).map(i => i.id));
+  
+  // Vérifier les previews
+  const previews = document.querySelectorAll('img[id^="preview"]');
+  console.log('🔍 Previews trouvés:', Array.from(previews).map(i => i.id));
+}
+
+// Pour debug, accessible depuis la console
+window.debugPhotos = debugPhotos;
+
+// ✅ FONCTION DEBUG GÉNÉRALE
+function debugApp() {
+  console.log('🔍 === DEBUG APPLICATION ===');
+  console.log(`📍 Étape actuelle: ${currentStep}/${totalSteps}`);
+  console.log(`📊 Photos stockées:`, Object.keys(photos));
+  console.log(`📋 Données formulaire:`, Object.keys(formData));
+  
+  // Vérifier tous les steps
+  for (let i = 1; i <= totalSteps; i++) {
+    const stepEl = document.getElementById(`step${i}`);
+    const isActive = stepEl?.classList.contains('active');
+    const isVisible = stepEl ? window.getComputedStyle(stepEl).display !== 'none' : false;
+    console.log(`📄 Step ${i}: ${stepEl ? 'EXISTE' : 'MANQUE'}, active: ${isActive}, visible: ${isVisible}`);
+  }
+  
+  // Vérifier la barre de progression
+  const progressFill = document.querySelector('.progress-fill');
+  const progressWidth = progressFill ? progressFill.style.width : 'N/A';
+  console.log(`📊 Barre de progression: ${progressWidth}`);
+  
+  return {
+    currentStep,
+    totalSteps,
+    photos: Object.keys(photos),
+    formData: Object.keys(formData),
+    progressWidth
+  };
+}
+
+// ✅ FONCTION POUR FORCER LE PASSAGE À L'ÉTAPE SUIVANTE (debug)
+function forceNextStep() {
+  console.log('🚨 FORCE: Passage à l\'étape suivante sans validation');
+  
+  if (currentStep < totalSteps) {
+    const currentStepEl = document.getElementById(`step${currentStep}`);
+    const nextStepEl = document.getElementById(`step${currentStep + 1}`);
+    
+    if (currentStepEl) currentStepEl.classList.remove('active');
+    currentStep++;
+    if (nextStepEl) nextStepEl.classList.add('active');
+    
+    updateProgressBar();
+    window.scrollTo(0, 0);
+    
+    console.log(`✅ FORCE: Passage réussi à l'étape ${currentStep}`);
+  } else {
+    console.log('🏁 FORCE: Déjà à la dernière étape');
+  }
+}
+
+// Accessibles depuis la console pour debug
+window.debugApp = debugApp;
+window.forceNextStep = forceNextStep;
+</script>

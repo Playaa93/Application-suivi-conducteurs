@@ -1,0 +1,667 @@
+<script>
+// ========================================
+// 🚀 PHASE 1 - PRISE DE SERVICE
+// ========================================
+
+// Variables globales
+let currentStep = 1;
+let totalSteps = 6;
+let formData = {};
+let photos = {};
+let pendingSync = 0;
+let sessionId = null;
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 Phase 1 - Prise de Service initialisée');
+  
+  // Récupérer sessionId depuis l'URL ou localStorage
+  const urlParams = new URLSearchParams(window.location.search);
+  sessionId = urlParams.get('session') || localStorage.getItem('currentSessionId');
+  
+  if (sessionId) {
+    console.log('📍 Session récupérée:', sessionId);
+    loadPhase0Data();
+  } else {
+    // Générer ID de session unique si aucune session trouvée
+    sessionId = generateSessionId();
+    console.log('📍 Nouvelle session générée:', sessionId);
+  }
+  
+  updateConnectionStatus();
+  updateProgressBar();
+  initializeEventListeners();
+  checkPendingData();
+});
+
+// ========================================
+// 📊 CHARGEMENT DONNÉES PHASE 0
+// ========================================
+
+function loadPhase0Data() {
+  console.log('📊 Chargement des données Phase 0...');
+  
+  // Récupérer les données depuis localStorage
+  const phase0Data = localStorage.getItem('phase0_data');
+  
+  if (phase0Data) {
+    try {
+      const data = JSON.parse(phase0Data);
+      console.log('✅ Données Phase 0 trouvées:', data);
+      
+      // Remplir le récapitulatif
+      fillSessionRecap(data);
+      
+      // Pré-remplir les champs tracteur/remorque
+      fillVehicleFields(data);
+      
+    } catch (error) {
+      console.error('❌ Erreur parsing données Phase 0:', error);
+      showWarning('Impossible de charger les données de session. Veuillez reprendre depuis l\'accueil.');
+    }
+  } else {
+    console.log('⚠️ Aucune donnée Phase 0 trouvée');
+    showWarning('Aucune donnée de préparation trouvée. Cette session peut être incomplète.');
+  }
+}
+
+function fillSessionRecap(data) {
+  // Remplir les informations de récapitulatif
+  if (data.conducteur) {
+    document.getElementById('recapConducteur').textContent = `${data.conducteur.prenom} ${data.conducteur.nom}`;
+    document.getElementById('recapSite').textContent = data.conducteur.site;
+  }
+  
+  if (data.tournee) {
+    document.getElementById('recapDate').textContent = formatDate(data.tournee.date);
+    document.getElementById('recapHeure').textContent = data.tournee.heure;
+    document.getElementById('recapTour').textContent = data.tournee.typeTour;
+    document.getElementById('recapType').textContent = data.tournee.typeLivraison;
+  }
+  
+  if (data.vehicules) {
+    document.getElementById('recapTracteur').textContent = data.vehicules.tracteur;
+    document.getElementById('recapRemorque').textContent = data.vehicules.remorque;
+  }
+}
+
+function fillVehicleFields(data) {
+  // Pré-remplir les champs véhicules
+  if (data.vehicules) {
+    document.getElementById('immatTracteur').value = data.vehicules.tracteur;
+    document.getElementById('immatRemorque').value = data.vehicules.remorque;
+  }
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('fr-FR');
+}
+
+// ========================================
+// 🆔 GESTION DE SESSION
+// ========================================
+
+function generateSessionId() {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substr(2, 9);
+  return `PS_${timestamp}_${random}`;
+}
+
+function saveSessionData(data) {
+  const sessionData = {
+    sessionId: sessionId,
+    phase: 'prise-service',
+    timestamp: new Date().toISOString(),
+    data: data,
+    photos: photos
+  };
+  
+  localStorage.setItem(`session_${sessionId}`, JSON.stringify(sessionData));
+  localStorage.setItem('currentSessionId', sessionId);
+  
+  console.log('💾 Session sauvegardée:', sessionId);
+  return sessionData;
+}
+
+// ========================================
+// 🔄 NAVIGATION
+// ========================================
+
+function nextStep() {
+  console.log(`🚀 Tentative passage à l'étape suivante depuis ${currentStep}`);
+  
+  if (validateCurrentStep()) {
+    console.log(`✅ Validation réussie pour étape ${currentStep}`);
+    saveCurrentStepData();
+    
+    if (currentStep < totalSteps) {
+      const currentStepEl = document.getElementById(`step${currentStep}`);
+      const nextStepEl = document.getElementById(`step${currentStep + 1}`);
+      
+      if (currentStepEl) currentStepEl.classList.remove('active');
+      currentStep++;
+      if (nextStepEl) nextStepEl.classList.add('active');
+      
+      updateProgressBar();
+      window.scrollTo(0, 0);
+      
+      console.log(`✅ Navigation terminée, étape actuelle: ${currentStep}`);
+    }
+  } else {
+    console.log(`❌ Validation échouée pour étape ${currentStep}`);
+  }
+}
+
+function prevStep() {
+  if (currentStep > 1) {
+    document.getElementById(`step${currentStep}`).classList.remove('active');
+    currentStep--;
+    document.getElementById(`step${currentStep}`).classList.add('active');
+    updateProgressBar();
+    window.scrollTo(0, 0);
+  }
+}
+
+function updateProgressBar() {
+  const progressFill = document.querySelector('.progress-fill');
+  const progressBar = document.querySelector('.progress-bar');
+  const percentage = (currentStep / totalSteps) * 100;
+  
+  console.log(`🔄 Mise à jour barre: étape ${currentStep}/${totalSteps} = ${percentage.toFixed(1)}%`);
+  
+  if (progressFill) {
+    progressFill.style.width = percentage + '%';
+  }
+  
+  if (progressBar) {
+    progressBar.setAttribute('aria-valuenow', percentage.toFixed(0));
+  }
+}
+
+// ========================================
+// ✅ VALIDATION
+// ========================================
+
+function validateCurrentStep() {
+  console.log(`🔍 Validation de l'étape ${currentStep}`);
+  const currentStepEl = document.getElementById(`step${currentStep}`);
+  
+  if (!currentStepEl) {
+    console.error(`❌ Élément step${currentStep} introuvable`);
+    return false;
+  }
+  
+  // Validation des champs obligatoires
+  const requiredInputs = currentStepEl.querySelectorAll('[required]');
+  console.log(`🔍 ${requiredInputs.length} champs obligatoires trouvés`);
+  
+  for (let input of requiredInputs) {
+    const value = input.value ? input.value.trim() : '';
+    
+    if (!value) {
+      const label = input.closest('.input-group')?.querySelector('label')?.textContent || 'Champ inconnu';
+      console.log(`❌ Champ vide: ${label}`);
+      alert(`Le champ "${label}" est obligatoire`);
+      input.focus();
+      return false;
+    }
+  }
+  
+  // Validation des radio buttons obligatoires
+  const radioGroups = currentStepEl.querySelectorAll('input[type="radio"][required]');
+  const radioGroupNames = [...new Set([...radioGroups].map(r => r.name))];
+  
+  for (let groupName of radioGroupNames) {
+    const checkedRadio = currentStepEl.querySelector(`input[name="${groupName}"]:checked`);
+    if (!checkedRadio) {
+      console.log(`❌ Groupe radio non sélectionné: ${groupName}`);
+      alert(`Veuillez sélectionner une option`);
+      return false;
+    }
+  }
+  
+  // Validation spécifique par étape
+  switch(currentStep) {
+    case 2: // Tracteur
+      if (!photos.carburant) {
+        alert('La photo de la jauge carburant est obligatoire');
+        return false;
+      }
+      break;
+      
+    case 3: // Photos tracteur  
+      if (!photos.faceAvant || !photos.coteConducteur || !photos.cotePassager) {
+        const manquantes = [];
+        if (!photos.faceAvant) manquantes.push('face avant');
+        if (!photos.coteConducteur) manquantes.push('côté conducteur');
+        if (!photos.cotePassager) manquantes.push('côté passager');
+        alert(`Photos manquantes: ${manquantes.join(', ')}`);
+        return false;
+      }
+      break;
+      
+    case 4: // Remorque
+      if (!photos.hayon) {
+        alert('La photo du hayon déployé est obligatoire');
+        return false;
+      }
+      break;
+      
+    case 6: // Chargement
+      if (!photos.chargement || !photos.remorquePortes) {
+        alert('Les photos du chargement et des portes sont obligatoires');
+        return false;
+      }
+      
+      // Vérifier que la checkbox des consignes est cochée
+      const consignesCheck = document.getElementById('consignes');
+      if (!consignesCheck || !consignesCheck.checked) {
+        alert('Vous devez certifier avoir pris en compte les consignes');
+        return false;
+      }
+      break;
+  }
+  
+  console.log(`✅ Validation réussie pour étape ${currentStep}`);
+  return true;
+}
+
+function saveCurrentStepData() {
+  const currentStepEl = document.getElementById(`step${currentStep}`);
+  const inputs = currentStepEl.querySelectorAll('input, select, textarea');
+  
+  inputs.forEach(input => {
+    if (input.type === 'radio') {
+      if (input.checked) {
+        formData[input.name] = input.value;
+      }
+    } else if (input.type === 'checkbox') {
+      if (!formData[input.name]) formData[input.name] = [];
+      if (input.checked && !formData[input.name].includes(input.value)) {
+        formData[input.name].push(input.value);
+      }
+    } else if (input.id) {
+      formData[input.id] = input.value;
+    }
+  });
+  
+  console.log(`💾 Données étape ${currentStep} sauvegardées`);
+}
+
+// ========================================
+// 📸 GESTION PHOTOS
+// ========================================
+
+function takePhoto(photoType) {
+  console.log('📸 Tentative prise de photo:', photoType);
+  
+  const inputId = `photo${photoType.charAt(0).toUpperCase() + photoType.slice(1)}`;
+  const input = document.getElementById(inputId);
+  
+  if (input) {
+    input.click();
+    console.log('✅ Click déclenché sur input');
+  } else {
+    console.error('❌ Input non trouvé:', inputId);
+    alert(`Erreur: Input ${inputId} non trouvé`);
+  }
+}
+
+function initializeEventListeners() {
+  // Gestion des photos
+  const photoInputs = document.querySelectorAll('input[type="file"]');
+  console.log('🔍 Inputs photo trouvés:', photoInputs.length);
+  
+  photoInputs.forEach(input => {
+    input.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      console.log('📸 Fichier sélectionné:', file ? file.name : 'AUCUN');
+      
+      if (file) {
+        const photoType = extractPhotoType(this.id);
+        console.log('🎯 Type photo extrait:', photoType);
+        processPhoto(file, photoType);
+      }
+    });
+  });
+  
+  // Radio buttons
+  const radioInputs = document.querySelectorAll('input[type="radio"]');
+  radioInputs.forEach(input => {
+    input.addEventListener('change', function() {
+      updateRadioDisplay(this.name);
+    });
+  });
+  
+  // Checkboxes
+  const checkboxInputs = document.querySelectorAll('input[type="checkbox"]');
+  checkboxInputs.forEach(input => {
+    input.addEventListener('change', function() {
+      updateCheckboxDisplay(this);
+    });
+  });
+}
+
+function extractPhotoType(inputId) {
+  const photoMapping = {
+    'photoCarburant': 'carburant',
+    'photoFaceAvant': 'faceAvant',
+    'photoCoteConducteur': 'coteConducteur',
+    'photoCotePassager': 'cotePassager',
+    'photoCarburantRemorque': 'carburantRemorque',
+    'photoHayon': 'hayon',
+    'photoRemorqueTablier': 'remorqueTablier',
+    'photoRemorqueConducteur': 'remorqueConducteur',
+    'photoRemorquePassager': 'remorquePassager',
+    'photoChargement': 'chargement',
+    'photoRemorquePortes': 'remorquePortes'
+  };
+  
+  return photoMapping[inputId] || inputId.replace('photo', '');
+}
+
+function processPhoto(file, photoType) {
+  console.log('🔄 Traitement photo:', photoType, file.name, `${(file.size/1024/1024).toFixed(2)}MB`);
+  
+  if (file.size > 10 * 1024 * 1024) {
+    alert('La photo est trop voluminieuse (max 10MB)');
+    return;
+  }
+  
+  compressImage(file, (compressedFile) => {
+    console.log('✅ Compression terminée:', `${(compressedFile.size/1024/1024).toFixed(2)}MB`);
+    
+    // Preview
+    const previewId = `preview${photoType.charAt(0).toUpperCase() + photoType.slice(1)}`;
+    const preview = document.getElementById(previewId);
+    
+    if (preview) {
+      preview.src = URL.createObjectURL(compressedFile);
+      preview.style.display = 'block';
+      console.log('✅ Preview affiché');
+    }
+    
+    // Update interface
+    const photoInput = document.querySelector(`[onclick*="${photoType}"]`);
+    if (photoInput) {
+      photoInput.classList.add('has-photo');
+      const textElement = photoInput.querySelector('.photo-text');
+      if (textElement) {
+        textElement.textContent = '✅ Photo capturée';
+      }
+    }
+    
+    // Stocker la photo
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      photos[photoType] = {
+        data: e.target.result.split(',')[1],
+        type: compressedFile.type,
+        name: `${photoType}_${sessionId}_${Date.now()}.jpg`,
+        size: compressedFile.size
+      };
+      
+      console.log('💾 Photo stockée:', photoType);
+    };
+    reader.readAsDataURL(compressedFile);
+  });
+}
+
+function compressImage(file, callback) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  
+  img.onload = function() {
+    const maxSize = 1200;
+    let { width, height } = img;
+    
+    if (width > height && width > maxSize) {
+      height = (height * maxSize) / width;
+      width = maxSize;
+    } else if (height > maxSize) {
+      width = (width * maxSize) / height;
+      height = maxSize;
+    }
+    
+    canvas.width = width;
+    canvas.height = height;
+    ctx.drawImage(img, 0, 0, width, height);
+    canvas.toBlob(callback, 'image/jpeg', 0.8);
+  };
+  
+  img.src = URL.createObjectURL(file);
+}
+
+function updateRadioDisplay(name) {
+  const radios = document.querySelectorAll(`input[name="${name}"]`);
+  radios.forEach(radio => {
+    const container = radio.closest('.radio-item');
+    if (container) {
+      if (radio.checked) {
+        container.classList.add('selected');
+      } else {
+        container.classList.remove('selected');
+      }
+    }
+  });
+}
+
+function updateCheckboxDisplay(checkbox) {
+  const container = checkbox.closest('.checkbox-item');
+  if (container) {
+    if (checkbox.checked) {
+      container.classList.add('selected');
+    } else {
+      container.classList.remove('selected');
+    }
+  }
+}
+
+// ========================================
+// 🔄 CONNEXION & STATUT
+// ========================================
+
+function updateConnectionStatus() {
+  const indicator = document.getElementById('connectionStatus');
+  if (navigator.onLine) {
+    indicator.innerHTML = '🟢 En ligne';
+    indicator.className = 'offline-indicator online';
+    if (pendingSync > 0) syncOfflineData();
+  } else {
+    indicator.innerHTML = '🔴 Hors ligne';
+    indicator.className = 'offline-indicator offline';
+  }
+}
+
+function checkPendingData() {
+  const offlineData = JSON.parse(localStorage.getItem('offlineData') || '[]');
+  pendingSync = offlineData.length;
+  if (pendingSync > 0) {
+    const indicator = document.getElementById('pendingIndicator');
+    if (indicator) {
+      indicator.innerHTML = `📤 ${pendingSync} formulaire(s) en attente`;
+      indicator.style.display = 'block';
+    }
+  }
+}
+
+window.addEventListener('online', updateConnectionStatus);
+window.addEventListener('offline', updateConnectionStatus);
+
+// Navigation vers l'accueil
+function goToHome() {
+  if (confirm('🏠 Retourner à l\'accueil ?\n\nLes données de cette session seront sauvegardées localement.')) {
+    const homeUrl = 'https://script.google.com/macros/s/AKfycbzm4fmWu41vXRFJLnJQSWXNlGxxDwhue73q0rDVjV1xsk-rl47vE1kq0tLep1Q2nz3D/exec';
+    
+    console.log('🏠 Retour accueil:', homeUrl);
+    window.location.href = homeUrl;
+  }
+}
+
+function goToPhase2() {
+  // Transition vers Phase 2 avec l'ID de session
+  const baseUrl = 'https://script.google.com/macros/s/AKfycbzm4fmWu41vXRFJLnJQSWXNlGxxDwhue73q0rDVjV1xsk-rl47vE1kq0tLep1Q2nz3D/exec';
+  const phase2Url = `${baseUrl}?phase=2&session=${sessionId}`;
+  
+  console.log('🚚 Transition vers Phase 2:', phase2Url);
+  window.location.href = phase2Url;
+}
+
+// ========================================
+// ✅ FINALISATION PHASE 1
+// ========================================
+
+function completePhase1() {
+  console.log('🏁 Finalisation Phase 1 - Prise de Service');
+  
+  if (!validateCurrentStep()) return;
+  
+  saveCurrentStepData();
+  
+  // Préparer les données finales
+  const finalData = {
+    sessionId: sessionId,
+    phase: 'prise-service',
+    timestamp: new Date().toISOString(),
+    formData: formData,
+    photos: photos,
+    photosCount: Object.keys(photos).length
+  };
+  
+  console.log('📋 Données finales Phase 1:', {
+    fieldsCount: Object.keys(formData).length,
+    photosCount: finalData.photosCount
+  });
+  
+  const submitBtn = document.querySelector('.btn-success');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="loading"></span> Envoi en cours...';
+  
+  if (navigator.onLine) {
+    sendPhase1ToServer(finalData);
+  } else {
+    savePhase1Offline(finalData);
+  }
+}
+
+function sendPhase1ToServer(data) {
+  console.log('☁️ Envoi Phase 1 vers serveur...');
+  
+  google.script.run
+    .withSuccessHandler(onPhase1Success)
+    .withFailureHandler(onPhase1Error)
+    .savePhase1Data(data);
+}
+
+function savePhase1Offline(data) {
+  console.log('💾 Sauvegarde Phase 1 hors ligne...');
+  try {
+    saveSessionData(data);
+    let offlineData = JSON.parse(localStorage.getItem('offlineData') || '[]');
+    offlineData.push(data);
+    localStorage.setItem('offlineData', JSON.stringify(offlineData));
+    pendingSync++;
+    
+    showTransitionMessage(
+      '✅ Phase 1 sauvegardée hors ligne', 
+      'Sera synchronisée à la reconnexion'
+    );
+  } catch (error) {
+    console.error('❌ Erreur sauvegarde offline:', error);
+    alert('Erreur sauvegarde hors ligne: ' + error.message);
+  }
+}
+
+function onPhase1Success(result) {
+  console.log('✅ Phase 1 envoyée avec succès:', result);
+  saveSessionData({ phase1Completed: true, serverId: result.id });
+  
+  showTransitionMessage(
+    '🎉 Prise de Service terminée !', 
+    'Prêt pour le suivi des livraisons'
+  );
+}
+
+function onPhase1Error(error) {
+  console.error('❌ Erreur envoi Phase 1:', error);
+  savePhase1Offline({
+    sessionId: sessionId,
+    phase: 'prise-service',
+    timestamp: new Date().toISOString(),
+    formData: formData,
+    photos: photos,
+    error: error.toString()
+  });
+}
+
+function showTransitionMessage(title, details) {
+  document.querySelectorAll('.step').forEach(step => step.style.display = 'none');
+  const container = document.querySelector('.form-container');
+  
+  container.innerHTML = `
+    <div class="success-message">
+      <div class="success-icon">🎉</div>
+      <h2 class="success-title">${title}</h2>
+      <p class="success-details">${details}</p>
+      <div class="transition-buttons">
+        <button class="btn btn-primary" onclick="goToPhase2()">
+          🚛 Commencer Suivi des Livraisons
+        </button>
+        <button class="btn btn-secondary" onclick="location.reload()">
+          📝 Nouvelle Prise de Service
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function goToPhase2() {
+  // Redirection vers Phase 2 avec session ID
+  const baseUrl = window.location.href.split('?')[0].replace('index-phase1.html', '');
+  window.location.href = `${baseUrl}index-phase2.html?session=${sessionId}`;
+}
+
+// ========================================
+// 🛠️ FONCTIONS DEBUG
+// ========================================
+
+function debugPhase1() {
+  console.log('🔍 === DEBUG PHASE 1 ===');
+  console.log(`📍 Session ID: ${sessionId}`);
+  console.log(`📍 Étape actuelle: ${currentStep}/${totalSteps}`);
+  console.log(`📊 Photos stockées:`, Object.keys(photos));
+  console.log(`📋 Données formulaire:`, Object.keys(formData));
+  
+  return {
+    sessionId,
+    currentStep,
+    totalSteps,
+    photos: Object.keys(photos),
+    formData: Object.keys(formData)
+  };
+}
+
+function syncOfflineData() {
+  const offlineData = JSON.parse(localStorage.getItem('offlineData') || '[]');
+  if (offlineData.length > 0 && navigator.onLine) {
+    console.log(`🔄 Synchronisation ${offlineData.length} formulaire(s)...`);
+    google.script.run
+      .withSuccessHandler(() => {
+        console.log('✅ Synchronisation réussie');
+        localStorage.removeItem('offlineData');
+        pendingSync = 0;
+        const indicator = document.getElementById('pendingIndicator');
+        if (indicator) indicator.style.display = 'none';
+      })
+      .withFailureHandler((error) => {
+        console.error('❌ Erreur synchronisation:', error);
+      })
+      .syncOfflineData(offlineData);
+  }
+}
+
+// Accessible depuis la console pour debug
+window.debugPhase1 = debugPhase1;
+</script>

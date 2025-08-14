@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Phase 1 - Prise de Service</title>
+  <?!= HtmlService.createHtmlOutputFromFile('styles').getContent(); ?>
+</head>
+<body>
+  <!-- Indicateurs de statut -->
+  <div id="connectionStatus" class="offline-indicator online">🟢 En ligne</div>
+  <div id="pendingIndicator" class="pending-indicator">📤 Données en attente</div>
+  
+  <!-- Bouton retour accueil -->
+  <div class="home-button">
+    <button class="btn-home" onclick="goToHome()" title="Retour à l'accueil">
+      🏠 Accueil
+    </button>
+  </div>
+  
+  <div class="form-container">
+    <!-- En-tête -->
+    <div class="header">
+      <h1>🚛 Phase 1 : Prise de Service</h1>
+      <div class="progress-bar" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" aria-label="Progression - Prise de Service">
+        <div class="progress-fill" style="width: 25%"></div>
+      </div>
+      <p class="phase-description">
+        Contrôles avant départ • Tracteur • Remorque • Chargement
+      </p>
+    </div>
+    
+    <!-- ÉTAPE 1: Récapitulatif Session -->
+    <div class="step active" id="step1">
+      <h2 class="step-title">👤 Récapitulatif Session</h2>
+      
+      <div class="info-box">
+        <h3>📋 Informations de la Tournée</h3>
+        <div id="sessionRecap">
+          <div class="detail-row">
+            <span class="detail-label">Conducteur :</span>
+            <span class="detail-value" id="recapConducteur">Chargement...</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Site :</span>
+            <span class="detail-value" id="recapSite">Chargement...</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Date :</span>
+            <span class="detail-value" id="recapDate">Chargement...</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Heure :</span>
+            <span class="detail-value" id="recapHeure">Chargement...</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Tour :</span>
+            <span class="detail-value" id="recapTour">Chargement...</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Type :</span>
+            <span class="detail-value" id="recapType">Chargement...</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Tracteur :</span>
+            <span class="detail-value" id="recapTracteur">Chargement...</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Remorque :</span>
+            <span class="detail-value" id="recapRemorque">Chargement...</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="reminder-box">
+        <h3>🚛 Contrôles de Prise de Service</h3>
+        <p>Vous allez maintenant effectuer les contrôles obligatoires avant le départ :</p>
+        <ul>
+          <li>État du tracteur (dégâts, kilométrage, carburant)</li>
+          <li>État de la remorque (dégâts, hayon, éclairage)</li>
+          <li>Vérification du chargement</li>
+          <li>Photos de contrôle</li>
+        </ul>
+      </div>
+      
+      <div class="input-group">
+        <label for="numeroContrat" class="required">Tour ou numéro de contrat</label>
+        <input type="text" id="numeroContrat" placeholder="Ex: T001, Contrat 12345..." required>
+      </div>
+
+      <!-- Rappel avant départ -->
+      <div class="reminder-box">
+        <h3>⚠️ Rappel avant départ</h3>
+        <ul>
+          <li>Contrôle des niveaux (huile, liquide de refroidissement, lave-glace, carburant)</li>
+          <li>Vérification de la pression des pneumatiques</li>
+          <li>Contrôle des feux et de la signalisation</li>
+          <li>Propreté générale du véhicule</li>
+          <li>Démarrage du groupe froid et vérification si alarmes</li>
+          <li>Vérification du bon fonctionnement du hayon</li>
+        </ul>
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-primary" onclick="nextStep()">Suivant - Tracteur →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 2: Tracteur -->
+    <div class="step" id="step2">
+      <h2 class="step-title">🚛 Tracteur</h2>
+      
+      <div class="input-group">
+        <label for="immatTracteur" class="required">Immatriculation tracteur</label>
+        <input type="text" id="immatTracteur" readonly style="background: #f8f9fa; cursor: not-allowed;" placeholder="Récupéré depuis Phase 0...">
+
+      </div>
+      
+      <div class="input-group">
+        <label>Nouveaux dégâts constatés tracteur ?</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="degatsTracteurNon" name="degatsTracteur" value="Non" checked>
+            <label for="degatsTracteurNon">Non</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="degatsTracteurOui" name="degatsTracteur" value="Oui">
+            <label for="degatsTracteurOui">Oui</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="kilometrage" class="required">Kilométrage départ tracteur</label>
+        <input type="number" id="kilometrage" placeholder="Ex: 245680" required>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo jauge carburant tracteur</label>
+        <div class="photo-input" onclick="takePhoto('carburant')">
+          <div class="photo-icon">⛽</div>
+          <div class="photo-text">Prendre la photo</div>
+          <div class="photo-subtext">Appuyez pour capturer</div>
+          <input type="file" id="photoCarburant" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewCarburant" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label for="commentairesTracteur">Commentaires</label>
+        <textarea id="commentairesTracteur" rows="3" placeholder="Précisions sur les dégâts ou autres observations..."></textarea>
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-primary" onclick="nextStep()">Suivant - Photos →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 3: Photos tracteur -->
+    <div class="step" id="step3">
+      <h2 class="step-title">📸 Photos Tracteur</h2>
+      
+      <div class="input-group">
+        <label class="required">Photo tracteur (face avant)</label>
+        <div class="photo-input" onclick="takePhoto('faceAvant')">
+          <div class="photo-icon">📷</div>
+          <div class="photo-text">Photo face avant</div>
+          <div class="photo-subtext">Vue complète de l'avant</div>
+          <input type="file" id="photoFaceAvant" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewFaceAvant" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo tracteur (côté conducteur)</label>
+        <div class="photo-input" onclick="takePhoto('coteConducteur')">
+          <div class="photo-icon">📷</div>
+          <div class="photo-text">Photo côté conducteur</div>
+          <div class="photo-subtext">Vue latérale gauche</div>
+          <input type="file" id="photoCoteConducteur" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewCoteConducteur" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo tracteur (côté passager)</label>
+        <div class="photo-input" onclick="takePhoto('cotePassager')">
+          <div class="photo-icon">📷</div>
+          <div class="photo-text">Photo côté passager</div>
+          <div class="photo-subtext">Vue latérale droite</div>
+          <input type="file" id="photoCotePassager" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewCotePassager" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-primary" onclick="nextStep()">Suivant - Remorque →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 4: Remorque et Hayon -->
+    <div class="step" id="step4">
+      <h2 class="step-title">🚚 Remorque et Hayon</h2>
+      
+      <div class="info-box">
+        <p><strong>⚠️ Branchement prise ABS - Attention consigne !</strong><br>
+        Avant tout branchement coupez systématiquement le contact afin d'éviter tout dysfonctionnement.</p>
+      </div>
+      
+      <div class="input-group">
+        <label for="immatRemorque" class="required">Immatriculation remorque</label>
+        <input type="text" id="immatRemorque" readonly style="background: #f8f9fa; cursor: not-allowed;" placeholder="Récupéré depuis Phase 0...">
+
+      </div>
+      
+      <div class="input-group">
+        <label>Nouveaux dégâts constatés remorque ?</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="degatsRemorqueNon" name="degatsRemorque" value="Non" checked>
+            <label for="degatsRemorqueNon">Non</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="degatsRemorqueOui" name="degatsRemorque" value="Oui">
+            <label for="degatsRemorqueOui">Oui</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label>Photo jauge carburant remorque</label>
+        <div class="photo-input optional-photo" onclick="takePhoto('carburantRemorque')">
+          <div class="photo-icon">⛽</div>
+          <div class="photo-text">Photo jauge remorque</div>
+          <div class="photo-subtext">Si porteur, passer à la suite</div>
+          <input type="file" id="photoCarburantRemorque" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewCarburantRemorque" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Test hayon (photo hayon déployé)</label>
+        <div class="photo-input" onclick="takePhoto('hayon')">
+          <div class="photo-icon">🔧</div>
+          <div class="photo-text">Photo hayon déployé</div>
+          <div class="photo-subtext">Hayon en position ouverte</div>
+          <input type="file" id="photoHayon" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewHayon" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label for="commentairesRemorque">Commentaires</label>
+        <textarea id="commentairesRemorque" rows="3" placeholder="Précisions sur les dégâts ou autres observations..."></textarea>
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-primary" onclick="nextStep()">Suivant - Photos Remorque →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 5: Photos remorque -->
+    <div class="step" id="step5">
+      <h2 class="step-title">📸 Photos Remorque</h2>
+      
+      <div class="input-group">
+        <label>Photo remorque (côté tablier)</label>
+        <div class="photo-input optional-photo" onclick="takePhoto('remorqueTablier')">
+          <div class="photo-icon">📷</div>
+          <div class="photo-text">Photo côté tablier</div>
+          <div class="photo-subtext">Si porteur, passer</div>
+          <input type="file" id="photoRemorqueTablier" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewRemorqueTablier" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label>Photo remorque (côté conducteur)</label>
+        <div class="photo-input optional-photo" onclick="takePhoto('remorqueConducteur')">
+          <div class="photo-icon">📷</div>
+          <div class="photo-text">Photo côté conducteur</div>
+          <div class="photo-subtext">Vue latérale gauche</div>
+          <input type="file" id="photoRemorqueConducteur" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewRemorqueConducteur" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label>Photo remorque (côté passager)</label>
+        <div class="photo-input optional-photo" onclick="takePhoto('remorquePassager')">
+          <div class="photo-icon">📷</div>
+          <div class="photo-text">Photo côté passager</div>
+          <div class="photo-subtext">Vue latérale droite</div>
+          <input type="file" id="photoRemorquePassager" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewRemorquePassager" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-primary" onclick="nextStep()">Suivant - Chargement →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 6: Chargement -->
+    <div class="step" id="step6">
+      <h2 class="step-title">📦 Chargement</h2>
+      
+      <div class="reminder-box">
+        <h3>📋 Rappel pour le chargement</h3>
+        <div class="checklist">
+          <h4>🌡️ Contrôle chargement - Vérification des températures :</h4>
+          <ul>
+            <li><strong>Frais :</strong> Entre 0 et 3°C</li>
+            <li><strong>Surgelé :</strong> -18°C et -24°C</li>
+            <li><strong>Fruits et légumes :</strong> Entre 11°C et 19°C</li>
+          </ul>
+          
+          <h4>✅ Autres contrôles :</h4>
+          <ul>
+            <li>Contrôle de conformité du chargement avec la feuille de route</li>
+            <li>Vérification de l'arrimage (Barre ou sangles en croix et en U)</li>
+            <li>Installation du logger dans son support (LIDL)</li>
+            <li>Validation du plombage avec le service expédition (LIDL)</li>
+            <li>Démarrage de la tournée avec le PDA sur base (ITM)</li>
+            <li>Démarrage de la tournée sur le Smartphone sur entrepôt (LIDL)</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label>Prise en compte des consignes</label>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="consignes" name="consignes" value="lu" required>
+            <label for="consignes">Je certifie avoir lu et pris en compte toutes les consignes de chargement</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="heureTopDepart" class="required">Heure du top départ</label>
+        <input type="time" id="heureTopDepart" required>
+        <small style="color: #666; font-size: 12px;">Heure à laquelle les documents vous ont été remis</small>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo du chargement</label>
+        <div class="photo-input" onclick="takePhoto('chargement')">
+          <div class="photo-icon">📦</div>
+          <div class="photo-text">Photo intérieur caisse</div>
+          <div class="photo-subtext">Marchandise sanglée visible</div>
+          <input type="file" id="photoChargement" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewChargement" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo remorque (côté portes)</label>
+        <div class="photo-input" onclick="takePhoto('remorquePortes')">
+          <div class="photo-icon">🚪</div>
+          <div class="photo-text">Photo portes fermées</div>
+          <div class="photo-subtext">Caisse visible intégralement</div>
+          <input type="file" id="photoRemorquePortes" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewRemorquePortes" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-success" onclick="completePhase1()">
+          ✅ Terminer Prise de Service
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <?!= HtmlService.createHtmlOutputFromFile('app-phase1').getContent(); ?>
+</body>
+</html>

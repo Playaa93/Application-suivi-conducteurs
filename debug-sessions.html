@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug Sessions</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .debug-section { margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+    .debug-section h3 { margin-top: 0; color: #333; }
+    button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .result { background: #f8f9fa; padding: 15px; border-radius: 4px; margin-top: 10px; font-family: monospace; white-space: pre-wrap; }
+    input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; width: 300px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Debug Sessions - Suivi Conducteurs</h1>
+    
+    <div class="debug-section">
+      <h3>📋 Lister toutes les sessions</h3>
+      <button onclick="debugListAllSessions()">Voir toutes les sessions</button>
+      <div id="resultListAll" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="debug-section">
+      <h3>🔍 Rechercher une session spécifique</h3>
+      <input type="text" id="searchSessionId" placeholder="Ex: PS_1755110533419_4UHY2958F">
+      <button onclick="debugSearchSession()">Rechercher</button>
+      <button onclick="suggestSessions()" style="background: #6c757d;">Suggérer IDs</button>
+      <div id="resultSearch" class="result" style="display: none;"></div>
+      <div id="sessionSuggestions" style="margin-top: 10px;"></div>
+    </div>
+    
+    <div class="debug-section">
+      <h3>🔧 Corriger les en-têtes</h3>
+      <button onclick="debugFixHeaders()">Forcer correction en-têtes</button>
+      <div id="resultFixHeaders" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="debug-section">
+      <h3>🏗️ Créer nouvelle structure de données</h3>
+      <p style="color: #666; font-size: 14px;">Crée les onglets CONDUCTEURS, VEHICULES, SITES avec données d'exemple</p>
+      <button onclick="debugCreateNewStructure()" style="background: #28a745;">Créer Structure Complète</button>
+      <div id="resultCreateStructure" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="debug-section">
+      <h3>🔗 Récupération URL Déploiement</h3>
+      <p style="color: #666; font-size: 14px;">Récupère automatiquement l'URL de déploiement pour corriger la navigation</p>
+      <button onclick="getDeploymentUrl()" style="background: #007bff;">Récupérer URL de Déploiement</button>
+      <div id="deploymentResult" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="debug-section">
+      <h3>👤 Test Connexion Conducteur</h3>
+      <p style="color: #666; font-size: 14px;">Tester la connexion avec un code conducteur pour débugger</p>
+      <input type="number" id="testConducteurCode" placeholder="Ex: 1001" min="1000" max="9999">
+      <button onclick="testConducteurConnection()" style="background: #28a745;">Tester Connexion</button>
+      <div id="conducteurTestResult" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="debug-section">
+      <h3>🧪 Tester une session</h3>
+      <input type="text" id="testSessionId" placeholder="PS_1755110533419_4UHY2958F" style="text-transform: uppercase;">
+      <button onclick="debugTestSession()">Tester session</button>
+      <div id="resultTest" class="result" style="display: none;"></div>
+    </div>
+  </div>
+
+  <script>
+    function debugListAllSessions() {
+      showLoading('resultListAll', 'Chargement des sessions...');
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          console.log('📥 Retour listAllSessions:', result);
+          if (result === null) {
+            showError('resultListAll', 'Retour null - Voir console pour détails');
+          } else {
+            showResult('resultListAll', result);
+          }
+        })
+        .withFailureHandler(function(error) {
+          console.error('❌ Erreur listAllSessions:', error);
+          showError('resultListAll', error);
+        })
+        .listAllSessions();
+    }
+    
+    function debugSearchSession() {
+      const sessionId = document.getElementById('searchSessionId').value.trim();
+      if (!sessionId) {
+        alert('Veuillez saisir un ID de session');
+        return;
+      }
+      
+      showLoading('resultSearch', 'Recherche en cours...');
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          console.log('📥 Retour getSessionData:', result);
+          if (result === null) {
+            showError('resultSearch', 'Session non trouvée - Voir console pour IDs disponibles');
+          } else {
+            showResult('resultSearch', result);
+          }
+        })
+        .withFailureHandler(function(error) {
+          console.error('❌ Erreur getSessionData:', error);
+          showError('resultSearch', error);
+        })
+        .getSessionData(sessionId);
+    }
+    
+    function debugFixHeaders() {
+      showLoading('resultFixHeaders', 'Correction des en-têtes...');
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          showResult('resultFixHeaders', result);
+        })
+        .withFailureHandler(function(error) {
+          showError('resultFixHeaders', error);
+        })
+        .forceFixHeaders();
+    }
+    
+    function debugTestSession() {
+      const sessionId = document.getElementById('testSessionId').value.trim();
+      if (!sessionId) {
+        alert('Veuillez saisir un ID de session');
+        return;
+      }
+      
+      showLoading('resultTest', 'Test en cours...');
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          showResult('resultTest', result);
+        })
+        .withFailureHandler(function(error) {
+          showError('resultTest', error);
+        })
+        .testSessionSearch(sessionId);
+    }
+    
+    function debugCreateNewStructure() {
+      if (!confirm('⚠️ Cela va créer/recréer les onglets CONDUCTEURS, VEHICULES, SITES.\n\nContinuer ?')) {
+        return;
+      }
+      
+      showLoading('resultCreateStructure', 'Création de la structure...');
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          showResult('resultCreateStructure', result);
+        })
+        .withFailureHandler(function(error) {
+          showError('resultCreateStructure', error);
+        })
+        .createNewDataStructure();
+    }
+    
+    function showLoading(elementId, message) {
+      const element = document.getElementById(elementId);
+      element.style.display = 'block';
+      element.style.background = '#fff3cd';
+      element.innerHTML = message;
+    }
+    
+    function showResult(elementId, result) {
+      const element = document.getElementById(elementId);
+      element.style.display = 'block';
+      element.style.background = '#d4edda';
+      element.innerHTML = JSON.stringify(result, null, 2);
+    }
+    
+    function showError(elementId, error) {
+      const element = document.getElementById(elementId);
+      element.style.display = 'block';
+      element.style.background = '#f8d7da';
+      element.innerHTML = 'ERREUR: ' + JSON.stringify(error, null, 2);
+    }
+    
+    function suggestSessions() {
+      showLoading('sessionSuggestions', 'Chargement des suggestions...');
+      
+      google.script.run
+        .withSuccessHandler(function(sessions) {
+          if (sessions && sessions.length > 0) {
+            let html = '<h4>💡 IDs disponibles (cliquez pour utiliser):</h4>';
+            sessions.forEach(function(session) {
+              html += `<button style="margin: 2px; padding: 5px; font-size: 12px; background: #e9ecef; border: 1px solid #ddd; border-radius: 3px; cursor: pointer;" onclick="useSessionId('${session.sessionId}')">${session.sessionId}</button><br>`;
+            });
+            document.getElementById('sessionSuggestions').innerHTML = html;
+            document.getElementById('sessionSuggestions').style.background = '#f8f9fa';
+            document.getElementById('sessionSuggestions').style.display = 'block';
+          } else {
+            showError('sessionSuggestions', 'Aucune session trouvée');
+          }
+        })
+        .withFailureHandler(function(error) {
+          showError('sessionSuggestions', error);
+        })
+        .listAllSessions();
+    }
+    
+    function useSessionId(sessionId) {
+      document.getElementById('searchSessionId').value = sessionId;
+      document.getElementById('testSessionId').value = sessionId;
+      document.getElementById('sessionSuggestions').style.display = 'none';
+    }
+    
+    // Auto-format des inputs (plus de conversion en majuscules)
+    document.getElementById('searchSessionId').addEventListener('input', function(e) {
+      e.target.value = e.target.value.replace(/[^A-Za-z0-9_]/g, '');
+    });
+    
+    document.getElementById('testSessionId').addEventListener('input', function(e) {
+      e.target.value = e.target.value.replace(/[^A-Za-z0-9_]/g, '');
+    });
+    // Nouvelle fonction pour récupérer l'URL de déploiement
+    function getDeploymentUrl() {
+      showLoading('deploymentResult', 'Récupération URL...');
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          console.log('📥 Info déploiement:', result);
+          showResult('deploymentResult', result);
+          
+          // Stocker l'URL localement si trouvée
+          if (result.webAppUrl) {
+            localStorage.setItem('deploymentUrl', result.webAppUrl);
+            alert('✅ URL de déploiement récupérée et stockée !\n\n' + result.webAppUrl);
+          }
+        })
+        .withFailureHandler(function(error) {
+          console.error('❌ Erreur récupération URL:', error);
+          showError('deploymentResult', error);
+        })
+        .getDeploymentInfo();
+    }
+    
+    // Test connexion conducteur
+    function testConducteurConnection() {
+      const codeConducteur = document.getElementById('testConducteurCode').value.trim();
+      if (!codeConducteur) {
+        alert('Veuillez saisir un code conducteur');
+        return;
+      }
+      
+      console.log('🧪 Test conducteur - Code saisi:', codeConducteur);
+      showLoading('conducteurTestResult', 'Test connexion conducteur...');
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          console.log('📥 Résultat test conducteur:', result);
+          document.getElementById('conducteurTestResult').style.display = 'block';
+          document.getElementById('conducteurTestResult').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+          
+          if (result && result.conducteur) {
+            alert('✅ Conducteur trouvé !\n\n' + 
+                  'Nom: ' + result.conducteur.nom + ' ' + result.conducteur.prenom + '\n' +
+                  'Site: ' + result.conducteur.site + '\n' +
+                  'Véhicules disponibles: ' + result.vehicules.length);
+          } else if (result && result.error) {
+            alert('❌ Erreur: ' + result.message);
+          } else {
+            alert('❌ Résultat inattendu - voir la console');
+          }
+        })
+        .withFailureHandler(function(error) {
+          console.error('❌ Erreur test conducteur:', error);
+          document.getElementById('conducteurTestResult').style.display = 'block';
+          document.getElementById('conducteurTestResult').innerHTML = '<div style="color: red;">ERREUR: ' + error + '</div>';
+        })
+        .getConducteurInfo(codeConducteur);
+    }
+  </script>
+</body>
+</html>

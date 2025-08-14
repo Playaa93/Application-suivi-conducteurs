@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Suivi Conducteurs - Prise de Service</title>
+  <?!= HtmlService.createHtmlOutputFromFile('styles').getContent(); ?>
+</head>
+<body>
+  <!-- Indicateurs de statut -->
+  <div id="connectionStatus" class="offline-indicator online">🟢 En ligne</div>
+  <div id="pendingIndicator" class="pending-indicator">📤 Données en attente</div>
+  
+  <div class="form-container">
+    <!-- En-tête -->
+    <div class="header">
+      <h1>🚛 Formulaire de Suivi Complet</h1>
+      <div class="progress-bar" role="progressbar" aria-valuenow="8" aria-valuemin="0" aria-valuemax="100" aria-label="Progression du formulaire">
+        <div class="progress-fill"></div>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 1: Informations générales -->
+    <div class="step active" id="step1">
+      <h2 class="step-title">📋 Prise de Service</h2>
+      
+      <div class="input-group">
+        <label class="required">S'agit-il de votre premier ou deuxième tour ?</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="tour1" name="tour" value="1er Tour" required>
+            <label for="tour1">1er Tour</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="tour2" name="tour" value="2ème Tour">
+            <label for="tour2">2ème Tour</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="siteDepart" class="required">Site de départ</label>
+        <select id="siteDepart" required>
+          <option value="">Sélectionner le site...</option>
+          <option value="LIDL - Chanteloup">LIDL - Chanteloup</option>
+          <option value="LIDL - Meaux">LIDL - Meaux</option>
+          <option value="ITM - Louviers">ITM - Louviers</option>
+          <option value="ITM - Heudebouville">ITM - Heudebouville</option>
+          <option value="ITM - Bourges">ITM - Bourges</option>
+        </select>
+      </div>
+      
+      <div class="input-group">
+        <label for="heureDepart" class="required">Heure de départ prévue</label>
+        <input type="time" id="heureDepart" required>
+      </div>
+      
+      <div class="input-group">
+        <label for="numeroContrat" class="required">Tour ou numéro de contrat</label>
+        <input type="text" id="numeroContrat" placeholder="Ex: T001, Contrat 12345..." required>
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-primary" onclick="nextStep()">Suivant →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 2: Tracteur -->
+    <div class="step" id="step2">
+      <h2 class="step-title">🚛 Tracteur</h2>
+      
+      <div class="input-group">
+        <label for="immatTracteur" class="required">Immatriculation tracteur</label>
+        <select id="immatTracteur" required>
+          <option value="">Sélectionner l'immatriculation...</option>
+          <option value="CL-532-ZD">CL-532-ZD</option>
+          <option value="EH-725-XC">EH-725-XC</option>
+          <option value="EQ-852-GF">EQ-852-GF</option>
+          <option value="EV-030-BQ">EV-030-BQ</option>
+          <option value="FC-706-WA">FC-706-WA</option>
+          <option value="FE-986-TA">FE-986-TA</option>
+          <option value="FJ-586-AK">FJ-586-AK</option>
+          <option value="FV-043-YQ">FV-043-YQ</option>
+          <option value="FV-422-WS">FV-422-WS</option>
+          <option value="FX-054-NZ">FX-054-NZ</option>
+          <option value="FX-691-BJ">FX-691-BJ</option>
+          <option value="GA-673-QR">GA-673-QR</option>
+          <option value="GA-767-AB">GA-767-AB</option>
+          <option value="GB-451-QB">GB-451-QB</option>
+          <option value="GB-455-QB">GB-455-QB</option>
+          <option value="GC-454-QW">GC-454-QW</option>
+          <option value="GE-540-WK">GE-540-WK</option>
+          <option value="GG-449-JV">GG-449-JV</option>
+          <option value="GG-591-YL">GG-591-YL</option>
+          <option value="GH-212-MS">GH-212-MS</option>
+          <option value="GH-231-RF">GH-231-RF</option>
+          <option value="GH-351-EA">GH-351-EA</option>
+          <option value="GH-436-XY">GH-436-XY</option>
+          <option value="GH-608-VW">GH-608-VW</option>
+          <option value="GH-658-QB">GH-658-QB</option>
+          <option value="GH-659-QB">GH-659-QB</option>
+          <option value="GJ-043-KL">GJ-043-KL</option>
+          <option value="GJ-975-NF">GJ-975-NF</option>
+          <option value="GL-019-VZ">GL-019-VZ</option>
+          <option value="GQ-015-DE">GQ-015-DE</option>
+          <option value="GQ-113-DK">GQ-113-DK</option>
+          <option value="GT-517-DH">GT-517-DH</option>
+          <option value="GV-448-RM">GV-448-RM</option>
+          <option value="GQ-922-DJ">GQ-922-DJ</option>
+          <option value="GY-277-VY">GY-277-VY</option>
+        </select>
+      </div>
+      
+      <div class="input-group">
+        <label>Nouveaux dégâts constatés tracteur ?</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="degatsTracteurNon" name="degatsTracteur" value="Non" checked>
+            <label for="degatsTracteurNon">Non</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="degatsTracteurOui" name="degatsTracteur" value="Oui">
+            <label for="degatsTracteurOui">Oui</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="kilometrage" class="required">Kilométrage départ tracteur</label>
+        <input type="number" id="kilometrage" placeholder="Ex: 245680" required>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo jauge carburant tracteur</label>
+        <div class="photo-input" onclick="takePhoto('carburant')">
+          <div class="photo-icon">⛽</div>
+          <div class="photo-text">Prendre la photo</div>
+          <div class="photo-subtext">Appuyez pour capturer</div>
+          <input type="file" id="photoCarburant" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewCarburant" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label for="commentairesTracteur">Commentaires</label>
+        <textarea id="commentairesTracteur" rows="3" placeholder="Précisions sur les dégâts ou autres observations..."></textarea>
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-primary" onclick="nextStep()">Suivant →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 3: Photos tracteur -->
+    <div class="step" id="step3">
+      <h2 class="step-title">📸 Photos Tracteur</h2>
+      
+      <div class="input-group">
+        <label class="required">Photo tracteur (face avant)</label>
+        <div class="photo-input" onclick="takePhoto('faceAvant')">
+          <div class="photo-icon">📷</div>
+          <div class="photo-text">Photo face avant</div>
+          <div class="photo-subtext">Vue complète de l'avant</div>
+          <input type="file" id="photoFaceAvant" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewFaceAvant" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo tracteur (côté conducteur)</label>
+        <div class="photo-input" onclick="takePhoto('coteConducteur')">
+          <div class="photo-icon">📷</div>
+          <div class="photo-text">Photo côté conducteur</div>
+          <div class="photo-subtext">Vue latérale gauche</div>
+          <input type="file" id="photoCoteConducteur" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewCoteConducteur" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo tracteur (côté passager)</label>
+        <div class="photo-input" onclick="takePhoto('cotePassager')">
+          <div class="photo-icon">📷</div>
+          <div class="photo-text">Photo côté passager</div>
+          <div class="photo-subtext">Vue latérale droite</div>
+          <input type="file" id="photoCotePassager" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewCotePassager" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-primary" onclick="nextStep()">Suivant →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 4: Remorque -->
+    <div class="step" id="step4">
+      <h2 class="step-title">🚚 Remorque et Hayon</h2>
+      
+      <div class="input-group">
+        <label for="immatRemorque" class="required">Immatriculation remorque</label>
+        <select id="immatRemorque" required>
+          <option value="">Sélectionner...</option>
+          <option value="Remorque client">Remorque client</option>
+          <option value="Porteur">Porteur</option>
+          <option value="FG-193-WS">FG-193-WS</option>
+          <option value="FP-675-MT">FP-675-MT</option>
+          <option value="FP-678-MT">FP-678-MT</option>
+          <option value="FP-691-MT">FP-691-MT</option>
+          <option value="FR-678-JB">FR-678-JB</option>
+          <option value="FX-901-FZ">FX-901-FZ</option>
+          <option value="FZ-295-BW">FZ-295-BW</option>
+          <option value="GG-102-ZL">GG-102-ZL</option>
+          <option value="GH-780-WW">GH-780-WW</option>
+        </select>
+      </div>
+      
+      <div class="input-group">
+        <label>Nouveaux dégâts constatés remorque ?</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="degatsRemorqueNon" name="degatsRemorque" value="Non" checked>
+            <label for="degatsRemorqueNon">Non</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="degatsRemorqueOui" name="degatsRemorque" value="Oui">
+            <label for="degatsRemorqueOui">Oui</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Test hayon (photo hayon déployé)</label>
+        <div class="photo-input" onclick="takePhoto('hayon')">
+          <div class="photo-icon">🔧</div>
+          <div class="photo-text">Photo hayon déployé</div>
+          <div class="photo-subtext">Hayon en position ouverte</div>
+          <input type="file" id="photoHayon" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewHayon" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label for="commentairesRemorque">Commentaires</label>
+        <textarea id="commentairesRemorque" rows="3" placeholder="Précisions sur les dégâts ou autres observations..."></textarea>
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-primary" onclick="nextStep()">Suivant →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 5: Photos remorque -->
+    <div class="step" id="step5">
+      <h2 class="step-title">📸 Photos Remorque</h2>
+      
+      <div class="input-group">
+        <label>Photo remorque (côté tablier)</label>
+        <div class="photo-input" onclick="takePhoto('remorqueTablier')">
+          <div class="photo-icon">📷</div>
+          <div class="photo-text">Photo côté tablier</div>
+          <div class="photo-subtext">Si porteur, passer</div>
+          <input type="file" id="photoRemorqueTablier" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewRemorqueTablier" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label>Photo remorque (côté conducteur)</label>
+        <div class="photo-input" onclick="takePhoto('remorqueConducteur')">
+          <div class="photo-icon">📷</div>
+          <div class="photo-text">Photo côté conducteur</div>
+          <div class="photo-subtext">Vue latérale gauche</div>
+          <input type="file" id="photoRemorqueConducteur" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewRemorqueConducteur" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label>Photo remorque (côté passager)</label>
+        <div class="photo-input" onclick="takePhoto('remorquePassager')">
+          <div class="photo-icon">📷</div>
+          <div class="photo-text">Photo côté passager</div>
+          <div class="photo-subtext">Vue latérale droite</div>
+          <input type="file" id="photoRemorquePassager" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewRemorquePassager" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-primary" onclick="nextStep()">Suivant →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 6: Chargement -->
+    <div class="step" id="step6">
+      <h2 class="step-title">📦 Chargement</h2>
+      
+      <div class="input-group">
+        <label>Prise en compte des consignes</label>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="consignes" name="consignes" value="lu" required>
+            <label for="consignes">Je certifie avoir lu et pris en compte toutes les consignes de chargement</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="heureTopDepart" class="required">Heure du top départ</label>
+        <input type="time" id="heureTopDepart" required>
+        <small style="color: #666; font-size: 12px;">Heure à laquelle les documents vous ont été remis</small>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo du chargement</label>
+        <div class="photo-input" onclick="takePhoto('chargement')">
+          <div class="photo-icon">📦</div>
+          <div class="photo-text">Photo intérieur caisse</div>
+          <div class="photo-subtext">Marchandise sanglée visible</div>
+          <input type="file" id="photoChargement" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewChargement" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo remorque (côté portes)</label>
+        <div class="photo-input" onclick="takePhoto('remorquePortes')">
+          <div class="photo-icon">🚪</div>
+          <div class="photo-text">Photo portes fermées</div>
+          <div class="photo-subtext">Caisse visible intégralement</div>
+          <input type="file" id="photoRemorquePortes" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewRemorquePortes" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-primary" onclick="nextStep()">Suivant →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 7: Suivi des livraisons - Infos générales -->
+    <div class="step" id="step7">
+      <h2 class="step-title">🚚 Suivi des Livraisons</h2>
+      
+      <div class="input-group">
+        <label for="dateDepart" class="required">Date de départ</label>
+        <input type="date" id="dateDepart" required>
+        <small style="color: #666; font-size: 12px;">Format JJ/MM/AAAA</small>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Cycle (jour ou nuit)</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="cycleJour" name="cycle" value="Jour" required>
+            <label for="cycleJour">Jour</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="cycleNuit" name="cycle" value="Nuit">
+            <label for="cycleNuit">Nuit</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Type</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="typeSec" name="typeLivraison" value="Sec" required>
+            <label for="typeSec">Sec</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="typeFrais" name="typeLivraison" value="Frais">
+            <label for="typeFrais">Frais</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="typeSurgele" name="typeLivraison" value="Surgelé">
+            <label for="typeSurgele">Surgelé</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="siteChargement" class="required">Site de chargement</label>
+        <select id="siteChargement" required>
+          <option value="">Sélectionner le site...</option>
+          <option value="LIDL - Coudray">LIDL - Coudray</option>
+          <option value="LIDL - Chanteloup">LIDL - Chanteloup</option>
+          <option value="ITM - Normandie">ITM - Normandie</option>
+          <option value="STG">STG</option>
+          <option value="ITM - PMS">ITM - PMS</option>
+          <option value="LIDL - Barbery">LIDL - Barbery</option>
+          <option value="LIDL - Meaux">LIDL - Meaux</option>
+          <option value="ITM - Bourges">ITM - Bourges</option>
+        </select>
+      </div>
+      
+      <div class="input-group">
+        <label for="nomConducteur" class="required">Nom du Conducteur</label>
+        <input type="text" id="nomConducteur" placeholder="Nom et prénom du conducteur" required>
+      </div>
+      
+      <div class="input-group">
+        <label for="heureDepartPrevue" class="required">Heure de départ prévue</label>
+        <input type="time" id="heureDepartPrevue" required>
+      </div>
+      
+      <div class="input-group">
+        <label for="magasinsALivrer" class="required">Magasins à Livrer</label>
+        <textarea id="magasinsALivrer" rows="3" placeholder="Renseignez les numéros de magasins ou la ville de votre tour" required></textarea>
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-primary" onclick="nextStep()">Suivant →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 8: Magasin 1 -->
+    <div class="step" id="step8">
+      <h2 class="step-title">🏪 Magasin 1</h2>
+      
+      <div class="input-group">
+        <label for="nomMagasin1" class="required">Nom du magasin</label>
+        <input type="text" id="nomMagasin1" placeholder="Nom ou numéro du magasin" required>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Statut de la livraison</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="statut1Livre" name="statutLivraison1" value="Livré" required>
+            <label for="statut1Livre">Livré</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="statut1Partiel" name="statutLivraison1" value="Partiellement livré">
+            <label for="statut1Partiel">Partiellement livré</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="statut1NonLivre" name="statutLivraison1" value="Non livré">
+            <label for="statut1NonLivre">Non livré</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="detailsLivraison1">Détails de la livraison</label>
+        <textarea id="detailsLivraison1" rows="3" placeholder="Si partiellement ou non livré, précisez pourquoi"></textarea>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Reprises de Contenants Vides</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="reprises1Oui" name="reprisesContenants1" value="Oui" required>
+            <label for="reprises1Oui">Oui</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="reprises1Non" name="reprisesContenants1" value="Non">
+            <label for="reprises1Non">Non</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="anomalies1">Anomalies rencontrées</label>
+        <textarea id="anomalies1" rows="3" placeholder="Décrivez toute anomalie rencontrée"></textarea>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo des Reprises ou Anomalies</label>
+        <div class="photo-input" onclick="takePhoto('magasin1Photo')">
+          <div class="photo-icon">📸</div>
+          <div class="photo-text">Photo reprises/anomalies</div>
+          <div class="photo-subtext">Si pas de reprises: photo espace stockage vides</div>
+          <input type="file" id="photoMagasin1Photo" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewMagasin1Photo" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-primary" onclick="nextStep()">Suivant →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 9: Magasin 2 -->
+    <div class="step" id="step9">
+      <h2 class="step-title">🏪 Magasin 2</h2>
+      
+      <div class="input-group">
+        <label for="nomMagasin2" class="required">Nom du magasin</label>
+        <input type="text" id="nomMagasin2" placeholder="Nom ou numéro du magasin" required>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Statut de la livraison</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="statut2Livre" name="statutLivraison2" value="Livré" required>
+            <label for="statut2Livre">Livré</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="statut2Partiel" name="statutLivraison2" value="Partiellement livré">
+            <label for="statut2Partiel">Partiellement livré</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="statut2NonLivre" name="statutLivraison2" value="Non livré">
+            <label for="statut2NonLivre">Non livré</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="detailsLivraison2">Détails de la livraison</label>
+        <textarea id="detailsLivraison2" rows="3" placeholder="Si partiellement ou non livré, précisez pourquoi"></textarea>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Reprises de Contenants Vides</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="reprises2Oui" name="reprisesContenants2" value="Oui" required>
+            <label for="reprises2Oui">Oui</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="reprises2Non" name="reprisesContenants2" value="Non">
+            <label for="reprises2Non">Non</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="anomalies2">Anomalies rencontrées</label>
+        <textarea id="anomalies2" rows="3" placeholder="Décrivez toute anomalie rencontrée"></textarea>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo des Reprises ou Anomalies</label>
+        <div class="photo-input" onclick="takePhoto('magasin2Photo')">
+          <div class="photo-icon">📸</div>
+          <div class="photo-text">Photo reprises/anomalies</div>
+          <div class="photo-subtext">Si pas de reprises: photo espace stockage vides</div>
+          <input type="file" id="photoMagasin2Photo" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewMagasin2Photo" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-primary" onclick="nextStep()">Suivant →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 10: Magasin 3 -->
+    <div class="step" id="step10">
+      <h2 class="step-title">🏪 Magasin 3</h2>
+      
+      <div class="input-group">
+        <label for="nomMagasin3" class="required">Nom du magasin</label>
+        <input type="text" id="nomMagasin3" placeholder="Nom ou numéro du magasin" required>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Statut de la livraison</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="statut3Livre" name="statutLivraison3" value="Livré" required>
+            <label for="statut3Livre">Livré</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="statut3Partiel" name="statutLivraison3" value="Partiellement livré">
+            <label for="statut3Partiel">Partiellement livré</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="statut3NonLivre" name="statutLivraison3" value="Non livré">
+            <label for="statut3NonLivre">Non livré</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="detailsLivraison3">Détails de la livraison</label>
+        <textarea id="detailsLivraison3" rows="3" placeholder="Si partiellement ou non livré, précisez pourquoi"></textarea>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Reprises de Contenants Vides</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="reprises3Oui" name="reprisesContenants3" value="Oui" required>
+            <label for="reprises3Oui">Oui</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="reprises3Non" name="reprisesContenants3" value="Non">
+            <label for="reprises3Non">Non</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="anomalies3">Anomalies rencontrées</label>
+        <textarea id="anomalies3" rows="3" placeholder="Décrivez toute anomalie rencontrée"></textarea>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo des Reprises ou Anomalies</label>
+        <div class="photo-input" onclick="takePhoto('magasin3Photo')">
+          <div class="photo-icon">📸</div>
+          <div class="photo-text">Photo reprises/anomalies</div>
+          <div class="photo-subtext">Si pas de reprises: photo espace stockage vides</div>
+          <input type="file" id="photoMagasin3Photo" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewMagasin3Photo" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-primary" onclick="nextStep()">Suivant →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 11: Fin de service - Infos générales -->
+    <div class="step" id="step11">
+      <h2 class="step-title">🏁 Fin de Service</h2>
+      
+      <div class="input-group">
+        <label for="siteAffectation" class="required">Site d'affectation</label>
+        <select id="siteAffectation" required>
+          <option value="">Sélectionner le site...</option>
+          <option value="LIDL - Chanteloup">LIDL - Chanteloup</option>
+          <option value="LIDL - Meaux">LIDL - Meaux</option>
+          <option value="ITM - Louviers">ITM - Louviers</option>
+          <option value="ITM - Heudebouville">ITM - Heudebouville</option>
+          <option value="ITM - Bourges">ITM - Bourges</option>
+        </select>
+      </div>
+      
+      <div class="input-group">
+        <label for="tourContratFin" class="required">Tour ou numéro de contrat</label>
+        <input type="text" id="tourContratFin" placeholder="Ex: T001, Contrat 12345..." required>
+      </div>
+      
+      <div class="input-group">
+        <label for="heureFinTournee" class="required">Heure de fin de la tournée</label>
+        <input type="time" id="heureFinTournee" required>
+        <small style="color: #666; font-size: 12px;">Heure de livraison du dernier PDV</small>
+      </div>
+      
+      <div class="input-group">
+        <label>À combien de magasins avez-vous effectué des livraisons ?</label>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="livraisons1" name="nombreLivraisons" value="1">
+            <label for="livraisons1">1</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="livraisons2" name="nombreLivraisons" value="2">
+            <label for="livraisons2">2</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="livraisons3" name="nombreLivraisons" value="3">
+            <label for="livraisons3">3</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="livraisons4" name="nombreLivraisons" value="4">
+            <label for="livraisons4">4</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="livraisons5" name="nombreLivraisons" value="5">
+            <label for="livraisons5">5</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="livraisons6" name="nombreLivraisons" value="6">
+            <label for="livraisons6">6</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="livraisons7" name="nombreLivraisons" value="7">
+            <label for="livraisons7">7</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="livraisons8" name="nombreLivraisons" value="8">
+            <label for="livraisons8">8</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="nombreLivraisonsAutre">Autre nombre de livraisons</label>
+        <input type="text" id="nombreLivraisonsAutre" placeholder="Si plus de 8, précisez">
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-primary" onclick="nextStep()">Suivant →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 12: Fin de service - Final -->
+    <div class="step" id="step12">
+      <h2 class="step-title">🏁 Fin de Service - Final</h2>
+      
+      <div class="input-group">
+        <label>Dans combien de magasins avez-vous récupéré des contenants vides ?</label>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="reprises0" name="nombreReprises" value="0">
+            <label for="reprises0">0</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="reprises1" name="nombreReprises" value="1">
+            <label for="reprises1">1</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="reprises2" name="nombreReprises" value="2">
+            <label for="reprises2">2</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="reprises3" name="nombreReprises" value="3">
+            <label for="reprises3">3</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="reprises4" name="nombreReprises" value="4">
+            <label for="reprises4">4</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="reprises5" name="nombreReprises" value="5">
+            <label for="reprises5">5</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="reprises6" name="nombreReprises" value="6">
+            <label for="reprises6">6</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="reprises7" name="nombreReprises" value="7">
+            <label for="reprises7">7</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="reprises8" name="nombreReprises" value="8">
+            <label for="reprises8">8</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="nombreReprisesAutre">Autre nombre de reprises</label>
+        <input type="text" id="nombreReprisesAutre" placeholder="Si plus de 8, précisez">
+      </div>
+      
+      <div class="input-group">
+        <label for="magasinsSansReprise">Magasins sans reprise</label>
+        <textarea id="magasinsSansReprise" rows="3" placeholder="Si un magasin n'a pas de reprise, spécifiez les villes concernées avec le motif"></textarea>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo du PDA sur l'écran des reprises (ITM)</label>
+        <div class="photo-input" onclick="takePhoto('pdaReprises')">
+          <div class="photo-icon">📱</div>
+          <div class="photo-text">Photo PDA reprises</div>
+          <div class="photo-subtext">Écran des reprises visible</div>
+          <input type="file" id="photoPdaReprises" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewPdaReprises" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo de la caisse avec les vides avant déchargement</label>
+        <div class="photo-input" onclick="takePhoto('caisseVides')">
+          <div class="photo-icon">📦</div>
+          <div class="photo-text">Photo caisse vides</div>
+          <div class="photo-subtext">Avant déchargement</div>
+          <input type="file" id="photoCaisseVides" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewCaisseVides" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo lettre de voiture remplie</label>
+        <div class="photo-input" onclick="takePhoto('lettreVoiture')">
+          <div class="photo-icon">📋</div>
+          <div class="photo-text">Photo lettre de voiture</div>
+          <div class="photo-subtext">Correctement complétée</div>
+          <input type="file" id="photoLettreVoiture" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewLettreVoiture" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label for="immatRemorqueFin" class="required">Immatriculation remorque (fin)</label>
+        <select id="immatRemorqueFin" required>
+          <option value="">Sélectionner...</option>
+          <option value="Remorque client">Remorque client</option>
+          <option value="Porteur">Porteur</option>
+          <option value="FG-193-WS">FG-193-WS</option>
+          <option value="FM-155-YL">FM-155-YL</option>
+          <option value="FP-672-MT">FP-672-MT</option>
+          <option value="FP-675-MT">FP-675-MT</option>
+          <option value="FP-678-MT">FP-678-MT</option>
+          <option value="FP-683-MT">FP-683-MT</option>
+          <option value="FP-690-MT">FP-690-MT</option>
+          <option value="FP-691-MT">FP-691-MT</option>
+          <option value="FR-678-JB">FR-678-JB</option>
+          <option value="FR-858-JB">FR-858-JB</option>
+          <option value="FX-054-NZ">FX-054-NZ</option>
+          <option value="FX-151-YA">FX-151-YA</option>
+          <option value="FX-661-FQ">FX-661-FQ</option>
+          <option value="FX-901-FZ">FX-901-FZ</option>
+          <option value="FZ-295-BW">FZ-295-BW</option>
+          <option value="GC-334-ZQ">GC-334-ZQ</option>
+          <option value="GC-454-QW">GC-454-QW</option>
+          <option value="GD-940-YS">GD-940-YS</option>
+          <option value="GE-616-MQ">GE-616-MQ</option>
+          <option value="GE-637-NF">GE-637-NF</option>
+          <option value="GF-146-KB">GF-146-KB</option>
+          <option value="GG-102-ZL">GG-102-ZL</option>
+          <option value="GH-066-JY">GH-066-JY</option>
+          <option value="GH-351-EA">GH-351-EA</option>
+          <option value="GH-504-SC">GH-504-SC</option>
+          <option value="GH-629-JV">GH-629-JV</option>
+          <option value="GH-780-WW">GH-780-WW</option>
+          <option value="GH-787-NV">GH-787-NV</option>
+          <option value="GL-610-QJ">GL-610-QJ</option>
+          <option value="GL-646-DC">GL-646-DC</option>
+          <option value="GL-668-EH">GL-668-EH</option>
+          <option value="GP-458-BD">GP-458-BD</option>
+          <option value="GY-103-VY">GY-103-VY</option>
+          <option value="EH-725-XC">EH-725-XC</option>
+        </select>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo de la caisse après nettoyage</label>
+        <div class="photo-input" onclick="takePhoto('caisseNettoyee')">
+          <div class="photo-icon">🧹</div>
+          <div class="photo-text">Photo caisse nettoyée</div>
+          <div class="photo-subtext">Après balayage</div>
+          <input type="file" id="photoCaisseNettoyee" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewCaisseNettoyee" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label for="immatTracteurFin" class="required">Immatriculation tracteur (fin)</label>
+        <input type="text" id="immatTracteurFin" placeholder="Immatriculation du tracteur" required>
+      </div>
+      
+      <div class="input-group">
+        <label for="kilometrageRetour" class="required">Kilométrage retour tracteur</label>
+        <input type="number" id="kilometrageRetour" placeholder="Ex: 246180" required>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Photo jauge carburant tracteur (fin)</label>
+        <div class="photo-input" onclick="takePhoto('carburantFin')">
+          <div class="photo-icon">⛽</div>
+          <div class="photo-text">Photo jauge fin</div>
+          <div class="photo-subtext">Niveau carburant final</div>
+          <input type="file" id="photoCarburantFin" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <img id="previewCarburantFin" class="photo-preview" style="display:none">
+      </div>
+      
+      <div class="input-group">
+        <label for="commentairesFinaux">Commentaires finaux</label>
+        <textarea id="commentairesFinaux" rows="3" placeholder="Observations générales sur la journée..."></textarea>
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-success" onclick="submitForm()">
+          ✅ Envoyer le formulaire complet
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <?!= HtmlService.createHtmlOutputFromFile('app').getContent(); ?>
+</body>
+</html>

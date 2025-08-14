@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Suivi Conducteurs - Accueil</title>
+  <?!= HtmlService.createHtmlOutputFromFile('styles').getContent(); ?>
+</head>
+<body>
+  <!-- Indicateurs de statut -->
+  <div id="connectionStatus" class="offline-indicator online">En ligne</div>
+  <div id="pendingIndicator" class="pending-indicator" style="display: none;">Donnees en attente</div>
+  
+  <div class="form-container">
+    <!-- En-tete principal -->
+    <div class="header">
+      <div class="logo-section">
+        <h1>Suivi Conducteurs</h1>
+        <p class="tagline">Gestion complete des tournees de livraison</p>
+      </div>
+    </div>
+    
+    <!-- Section nouvelle tournee -->
+    <div class="home-section active" id="newTourneeSection">
+      <div class="welcome-card">
+        <h2>Demarrer une Nouvelle Tournee</h2>
+        <p>Commencez votre prise de service et suivez votre tournee complete</p>
+        
+        <div class="phases-overview">
+          <div class="phase-card">
+            <div class="phase-icon">🏁</div>
+            <div class="phase-info">
+              <h3>Phase 1</h3>
+              <p>Prise de Service</p>
+              <small>Vehicule • Photos • Consignes</small>
+            </div>
+          </div>
+          
+          <div class="phase-separator">→</div>
+          
+          <div class="phase-card">
+            <div class="phase-icon">🚚</div>
+            <div class="phase-info">
+              <h3>Phase 2</h3>
+              <p>Suivi Livraisons</p>
+              <small>Magasins • Reprises • Temps reel</small>
+            </div>
+          </div>
+          
+          <div class="phase-separator">→</div>
+          
+          <div class="phase-card">
+            <div class="phase-icon">🏢</div>
+            <div class="phase-info">
+              <h3>Phase 3</h3>
+              <p>Fin de Service</p>
+              <small>Retour base • Consolidation</small>
+            </div>
+          </div>
+        </div>
+        
+        <button class="btn btn-primary btn-large" onclick="startNewTournee()">
+          Commencer Nouvelle Tournee
+        </button>
+      </div>
+    </div>
+    
+    <!-- Section reprise de session -->
+    <div class="home-section" id="resumeSessionSection">
+      <div class="resume-card">
+        <h2>Reprendre une Tournee</h2>
+        <p>Continuez la ou vous vous etes arrete avec votre ID de session</p>
+        
+        <div class="session-input-group">
+          <label for="sessionIdInput">ID de Session</label>
+          <input type="text" id="sessionIdInput" placeholder="Ex: PS_1755108586989_xyz123" 
+                 autocomplete="off" spellcheck="false">
+          <small>Format: PS_timestamp_code</small>
+        </div>
+        
+        <div class="session-actions">
+          <button class="btn btn-secondary" onclick="loadSessionFromLocal()">
+            Session Locale
+          </button>
+          <button class="btn btn-primary" onclick="resumeSession()">
+            Reprendre Session
+          </button>
+        </div>
+        
+        <!-- Informations session chargee -->
+        <div id="sessionInfo" class="session-details" style="display: none;">
+          <h3>Details de la Session</h3>
+          <div id="sessionContent"></div>
+          <div id="sessionActions" class="session-continue-actions"></div>
+        </div>
+        
+        <!-- Messages d'erreur/avertissement -->
+        <div id="sessionWarning" class="warning-message" style="display: none;"></div>
+        <div id="sessionError" class="error-message" style="display: none;"></div>
+      </div>
+    </div>
+    
+    <!-- Navigation entre sections -->
+    <div class="home-navigation">
+      <button class="nav-btn active" onclick="showSection('newTourneeSection')" id="newTourneeBtn">
+        Nouvelle Tournee
+      </button>
+      <button class="nav-btn" onclick="showSection('resumeSessionSection')" id="resumeSessionBtn">
+        Reprendre Session
+      </button>
+    </div>
+    
+    <!-- Sessions recentes -->
+    <div class="recent-sessions">
+      <h3>Sessions Recentes</h3>
+      <div id="recentSessionsList" class="recent-list">
+        <p class="empty-state">Aucune session recente trouvee</p>
+      </div>
+    </div>
+    
+    <!-- Informations systeme -->
+    <div class="system-info">
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Version:</span>
+          <span class="info-value">2025.1.0</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Support:</span>
+          <span class="info-value">Multi-phases PWA</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Statut:</span>
+          <span class="info-value online-status">Operationnel</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Variables globales
+    var currentSession = null;
+    var recentSessions = [];
+
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Page accueil initialisee');
+      loadRecentSessions();
+      checkCurrentSession();
+      checkConnection();
+      initializeEventListeners();
+    });
+
+    function initializeEventListeners() {
+      var sessionInput = document.getElementById('sessionIdInput');
+      sessionInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          resumeSession();
+        }
+      });
+      
+      sessionInput.addEventListener('input', function(e) {
+        var value = e.target.value.toUpperCase();
+        value = value.replace(/[^A-Z0-9_]/g, '');
+        e.target.value = value;
+      });
+    }
+
+    // Navigation entre sections
+    function showSection(sectionId) {
+      var sections = document.querySelectorAll('.home-section');
+      for (var i = 0; i < sections.length; i++) {
+        sections[i].classList.remove('active');
+      }
+      
+      var btns = document.querySelectorAll('.nav-btn');
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].classList.remove('active');
+      }
+      
+      document.getElementById(sectionId).classList.add('active');
+      
+      if (sectionId === 'newTourneeSection') {
+        document.getElementById('newTourneeBtn').classList.add('active');
+      } else if (sectionId === 'resumeSessionSection') {
+        document.getElementById('resumeSessionBtn').classList.add('active');
+      }
+    }
+
+    // Nouvelle tournee
+    function startNewTournee() {
+      console.log('Demarrage nouvelle tournee');
+      
+      localStorage.removeItem('currentSessionId');
+      localStorage.removeItem('phase1_data');
+      localStorage.removeItem('phase2_data');
+      localStorage.removeItem('phase3_data');
+      
+      window.location.href = 'https://script.google.com/macros/s/AKfycbwzKW0vQGiKkTmqmr5mAAiC-QQFCrN2M2e5_1LaDa_NQYbxHQIIGZGNV3tMZpBwB1F_/exec?phase=1';
+    }
+
+    // Reprise de session
+    function resumeSession() {
+      var sessionId = document.getElementById('sessionIdInput').value.trim();
+      
+      if (!sessionId) {
+        showError('Veuillez saisir un ID de session');
+        return;
+      }
+      
+      if (!isValidSessionId(sessionId)) {
+        showError('Format ID de session invalide. Format attendu: PS_timestamp_code');
+        return;
+      }
+      
+      console.log('Reprise de session:', sessionId);
+      showLoading('Recherche de la session...');
+      
+      google.script.run
+        .withSuccessHandler(onSessionFound)
+        .withFailureHandler(onSessionError)
+        .getSessionData(sessionId);
+    }
+
+    function loadSessionFromLocal() {
+      var localSessionId = localStorage.getItem('currentSessionId');
+      
+      if (!localSessionId) {
+        showWarning('Aucune session locale trouvee');
+        return;
+      }
+      
+      document.getElementById('sessionIdInput').value = localSessionId;
+      resumeSession();
+    }
+
+    function onSessionFound(sessionData) {
+      hideLoading();
+      
+      if (!sessionData) {
+        showError('Session introuvable. Verifiez ID de session.');
+        return;
+      }
+      
+      console.log('Session trouvee:', sessionData);
+      currentSession = sessionData;
+      displaySessionDetails(sessionData);
+      addToRecentSessions(sessionData);
+    }
+
+    function onSessionError(error) {
+      hideLoading();
+      console.error('Erreur session:', error);
+      showError('Erreur de connexion. Verifiez votre reseau.');
+    }
+
+    function displaySessionDetails(sessionData) {
+      var sessionInfo = document.getElementById('sessionInfo');
+      var sessionContent = document.getElementById('sessionContent');
+      var sessionActions = document.getElementById('sessionActions');
+      
+      var currentPhase = determineCurrentPhase(sessionData);
+      var phaseStatus = getPhaseStatus(sessionData);
+      
+      sessionContent.innerHTML = 
+        '<div class="session-detail-grid">' +
+          '<div class="detail-item">' +
+            '<span class="detail-label">ID Session:</span>' +
+            '<code class="detail-value">' + sessionData.sessionId + '</code>' +
+          '</div>' +
+          '<div class="detail-item">' +
+            '<span class="detail-label">Conducteur:</span>' +
+            '<span class="detail-value">' + (sessionData.conducteur || 'Non renseigne') + '</span>' +
+          '</div>' +
+          '<div class="detail-item">' +
+            '<span class="detail-label">Site:</span>' +
+            '<span class="detail-value">' + (sessionData.site || 'Non renseigne') + '</span>' +
+          '</div>' +
+          '<div class="detail-item">' +
+            '<span class="detail-label">Tour:</span>' +
+            '<span class="detail-value">' + (sessionData.tour || 'Non renseigne') + '</span>' +
+          '</div>' +
+          '<div class="detail-item">' +
+            '<span class="detail-label">Statut:</span>' +
+            '<span class="detail-value status-' + (sessionData.status ? sessionData.status.toLowerCase() : '') + '">' + getStatusLabel(sessionData.status) + '</span>' +
+          '</div>' +
+          '<div class="detail-item">' +
+            '<span class="detail-label">Derniere MAJ:</span>' +
+            '<span class="detail-value">' + formatDate(sessionData.lastUpdated) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="phase-progress">' +
+          '<h4>Progression des Phases</h4>' +
+          '<div class="progress-phases">' +
+            '<div class="progress-phase ' + (phaseStatus.phase1 ? 'completed' : (currentPhase === 1 ? 'current' : 'pending')) + '">' +
+              '<div class="progress-icon">' + (phaseStatus.phase1 ? '✅' : (currentPhase === 1 ? '🔄' : '⏳')) + '</div>' +
+              '<span>Phase 1: Prise de Service</span>' +
+            '</div>' +
+            '<div class="progress-phase ' + (phaseStatus.phase2 ? 'completed' : (currentPhase === 2 ? 'current' : 'pending')) + '">' +
+              '<div class="progress-icon">' + (phaseStatus.phase2 ? '✅' : (currentPhase === 2 ? '🔄' : '⏳')) + '</div>' +
+              '<span>Phase 2: Suivi Livraisons</span>' +
+            '</div>' +
+            '<div class="progress-phase ' + (phaseStatus.phase3 ? 'completed' : (currentPhase === 3 ? 'current' : 'pending')) + '">' +
+              '<div class="progress-icon">' + (phaseStatus.phase3 ? '✅' : (currentPhase === 3 ? '🔄' : '⏳')) + '</div>' +
+              '<span>Phase 3: Fin de Service</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      
+      if (sessionData.status === 'COMPLETE') {
+        sessionActions.innerHTML = 
+          '<div class="completion-notice">' +
+            '<h4>Tournee Terminee</h4>' +
+            '<p>Cette session a ete finalisee avec succes.</p>' +
+            '<button class="btn btn-secondary" onclick="viewSessionData()">' +
+              'Voir les Donnees' +
+            '</button>' +
+          '</div>';
+        showWarning('Cette session est deja terminee. Toutes les phases ont ete completees.', 'success');
+      } else {
+        var nextPhaseUrl = getNextPhaseUrl(currentPhase, sessionData.sessionId);
+        var phaseLabel = getPhaseLabel(currentPhase);
+        
+        sessionActions.innerHTML = 
+          '<div class="continue-actions">' +
+            '<button class="btn btn-primary btn-large" onclick="continueSession(\'' + nextPhaseUrl + '\')">' +
+              'Continuer ' + phaseLabel +
+            '</button>' +
+            '<button class="btn btn-secondary" onclick="restartFromPhase1()">' +
+              'Recommencer depuis Phase 1' +
+            '</button>' +
+          '</div>';
+        
+        if (isSessionOld(sessionData.lastUpdated)) {
+          showWarning('Cette session date de plus de 24h. Verifiez que les donnees sont encore pertinentes.', 'warning');
+        }
+      }
+      
+      sessionInfo.style.display = 'block';
+    }
+
+    function determineCurrentPhase(sessionData) {
+      if (sessionData.phase3Completed) return 4;
+      if (sessionData.phase2Completed) return 3;
+      if (sessionData.phase1Completed) return 2;
+      return 1;
+    }
+
+    function getPhaseStatus(sessionData) {
+      return {
+        phase1: !!sessionData.phase1Completed,
+        phase2: !!sessionData.phase2Completed,
+        phase3: !!sessionData.phase3Completed
+      };
+    }
+
+    function getNextPhaseUrl(currentPhase, sessionId) {
+      var baseUrl = 'https://script.google.com/macros/s/AKfycbwzKW0vQGiKkTmqmr5mAAiC-QQFCrN2M2e5_1LaDa_NQYbxHQIIGZGNV3tMZpBwB1F_/exec';
+      return baseUrl + '?phase=' + currentPhase + '&session=' + sessionId;
+    }
+
+    function getPhaseLabel(phase) {
+      switch(phase) {
+        case 1: return 'Phase 1 - Prise de Service';
+        case 2: return 'Phase 2 - Suivi Livraisons';
+        case 3: return 'Phase 3 - Fin de Service';
+        default: return 'Session terminee';
+      }
+    }
+
+    function continueSession(url) {
+      localStorage.setItem('currentSessionId', currentSession.sessionId);
+      window.location.href = url;
+    }
+
+    function restartFromPhase1() {
+      if (confirm('Recommencer depuis la Phase 1 ?\n\nCela ne supprimera pas les donnees existantes, mais vous permettra de refaire la prise de service.')) {
+        var sessionId = currentSession.sessionId;
+        var url = 'https://script.google.com/macros/s/AKfycbwzKW0vQGiKkTmqmr5mAAiC-QQFCrN2M2e5_1LaDa_NQYbxHQIIGZGNV3tMZpBwB1F_/exec?phase=1&session=' + sessionId;
+        localStorage.setItem('currentSessionId', sessionId);
+        window.location.href = url;
+      }
+    }
+
+    function viewSessionData() {
+      if (currentSession && currentSession.sessionId) {
+        alert('Session ' + currentSession.sessionId + '\n\nConsultez votre Google Sheets pour voir toutes les donnees de cette session terminee.');
+      }
+    }
+
+    // Validation
+    function isValidSessionId(sessionId) {
+      var pattern = /^PS_\d{13}_[A-Z0-9]+$/;
+      return pattern.test(sessionId);
+    }
+
+    function isSessionOld(lastUpdated) {
+      if (!lastUpdated) return false;
+      var sessionDate = new Date(lastUpdated);
+      var now = new Date();
+      var diffHours = (now - sessionDate) / (1000 * 60 * 60);
+      return diffHours > 24;
+    }
+
+    function getStatusLabel(status) {
+      switch(status) {
+        case 'IN_PROGRESS': return 'En cours';
+        case 'COMPLETE': return 'Terminee';
+        case 'SUSPENDED': return 'Suspendue';
+        default: return 'Inconnu';
+      }
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return 'Non disponible';
+      var date = new Date(dateString);
+      return date.toLocaleString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // Sessions recentes
+    function loadRecentSessions() {
+      var recent = localStorage.getItem('recentSessions');
+      if (recent) {
+        recentSessions = JSON.parse(recent);
+        displayRecentSessions();
+      }
+    }
+
+    function addToRecentSessions(sessionData) {
+      recentSessions = recentSessions.filter(function(s) { 
+        return s.sessionId !== sessionData.sessionId; 
+      });
+      
+      recentSessions.unshift({
+        sessionId: sessionData.sessionId,
+        conducteur: sessionData.conducteur,
+        site: sessionData.site,
+        status: sessionData.status,
+        lastAccess: new Date().toISOString()
+      });
+      
+      recentSessions = recentSessions.slice(0, 5);
+      localStorage.setItem('recentSessions', JSON.stringify(recentSessions));
+      displayRecentSessions();
+    }
+
+    function displayRecentSessions() {
+      var container = document.getElementById('recentSessionsList');
+      
+      if (recentSessions.length === 0) {
+        container.innerHTML = '<p class="empty-state">Aucune session recente trouvee</p>';
+        return;
+      }
+      
+      var html = '';
+      for (var i = 0; i < recentSessions.length; i++) {
+        var session = recentSessions[i];
+        html += '<div class="recent-session" onclick="loadRecentSession(\'' + session.sessionId + '\')">' +
+          '<div class="recent-session-info">' +
+            '<div class="session-id">' + session.sessionId + '</div>' +
+            '<div class="session-meta">' +
+              '<span class="conducteur">' + (session.conducteur || 'Conducteur non renseigne') + '</span>' +
+              '<span class="site">' + (session.site || 'Site non renseigne') + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="session-status status-' + (session.status ? session.status.toLowerCase() : '') + '">' + getStatusLabel(session.status) + '</div>' +
+        '</div>';
+      }
+      container.innerHTML = html;
+    }
+
+    function loadRecentSession(sessionId) {
+      document.getElementById('sessionIdInput').value = sessionId;
+      showSection('resumeSessionSection');
+      resumeSession();
+    }
+
+    function checkCurrentSession() {
+      var currentSessionId = localStorage.getItem('currentSessionId');
+      if (currentSessionId) {
+        document.getElementById('sessionIdInput').value = currentSessionId;
+        showInfo('Session en cours detectee: ' + currentSessionId + '. Cliquez sur "Session Locale" pour reprendre.');
+      }
+    }
+
+    // Interface utilisateur
+    function showLoading(message) {
+      console.log('Loading:', message || 'Chargement...');
+    }
+
+    function hideLoading() {
+      console.log('Loading termine');
+    }
+
+    function showError(message) {
+      var errorDiv = document.getElementById('sessionError');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+      
+      document.getElementById('sessionWarning').style.display = 'none';
+      
+      setTimeout(function() {
+        errorDiv.style.display = 'none';
+      }, 5000);
+    }
+
+    function showWarning(message, type) {
+      var warningDiv = document.getElementById('sessionWarning');
+      warningDiv.textContent = message;
+      warningDiv.className = (type || 'warning') + '-message';
+      warningDiv.style.display = 'block';
+      
+      document.getElementById('sessionError').style.display = 'none';
+      
+      if ((type || 'warning') === 'warning') {
+        setTimeout(function() {
+          warningDiv.style.display = 'none';
+        }, 8000);
+      }
+    }
+
+    function showInfo(message) {
+      showWarning(message, 'info');
+    }
+
+    function checkConnection() {
+      var indicator = document.getElementById('connectionStatus');
+      var statusSpan = document.querySelector('.online-status');
+      
+      if (navigator.onLine) {
+        indicator.className = 'offline-indicator online';
+        indicator.textContent = 'En ligne';
+        if (statusSpan) statusSpan.textContent = 'Operationnel';
+      } else {
+        indicator.className = 'offline-indicator offline';
+        indicator.textContent = 'Hors ligne';
+        if (statusSpan) statusSpan.textContent = 'Hors ligne';
+      }
+    }
+
+    // Ecouteurs evenements
+    window.addEventListener('online', checkConnection);
+    window.addEventListener('offline', checkConnection);
+
+    // Debug
+    window.debugHome = function() {
+      console.log('DEBUG HOME');
+      console.log('Session actuelle:', currentSession);
+      console.log('Sessions recentes:', recentSessions);
+    };
+  </script>
+</body>
+</html>

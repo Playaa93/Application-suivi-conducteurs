@@ -1,0 +1,902 @@
+<script>
+// ========================================
+// 🚛 PHASE 2 - SUIVI DES LIVRAISONS
+// Gestion dynamique des magasins
+// ========================================
+
+// Variables globales
+let currentStep = 1;
+let totalSteps = 3;
+let sessionId = null;
+let generalData = {};
+let magasins = [];
+let currentMagasinIndex = 0;
+let photos = {};
+let pendingSync = 0;
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚛 Phase 2 - Suivi des Livraisons initialisée');
+  
+  // Récupérer la session depuis l'URL ou localStorage
+  initializeSession();
+  
+  updateConnectionStatus();
+  initializeEventListeners();
+  checkPendingData();
+  
+  // Précharger certaines données si disponibles
+  preloadGeneralData();
+});
+
+// ========================================
+// 🆔 GESTION DE SESSION
+// ========================================
+
+function initializeSession() {
+  // Récupérer session ID depuis l'URL
+  const urlParams = new URLSearchParams(window.location.search);
+  sessionId = urlParams.get('session') || localStorage.getItem('currentSessionId');
+  
+  if (!sessionId) {
+    alert('⚠️ Aucune session trouvée. Retour à la Phase 1.');
+    window.location.href = window.location.href.replace('index-phase2.html', 'index-phase1.html');
+    return;
+  }
+  
+  console.log('📍 Session récupérée:', sessionId);
+  
+  // Afficher info session
+  const sessionInfo = document.getElementById('sessionInfo');
+  const sessionText = document.getElementById('sessionText');
+  
+  if (sessionInfo && sessionText) {
+    sessionText.textContent = `Session: ${sessionId.substring(0, 20)}...`;
+    sessionInfo.classList.add('show');
+  }
+  
+  // Vérifier si Phase 1 est complète
+  checkPhase1Status();
+}
+
+function checkPhase1Status() {
+  // Récupérer les données de session stockées
+  const sessionData = localStorage.getItem(`session_${sessionId}`);
+  
+  if (sessionData) {
+    try {
+      const data = JSON.parse(sessionData);
+      console.log('📋 Données session trouvées:', data.phase);
+      
+      if (data.phase !== 'prise-service') {
+        console.warn('⚠️ Phase 1 non terminée');
+      }
+    } catch (error) {
+      console.error('❌ Erreur lecture session:', error);
+    }
+  }
+}
+
+function preloadGeneralData() {
+  // Préremplir les données si disponibles dans localStorage
+  const sessionData = localStorage.getItem(`session_${sessionId}`);
+  
+  if (sessionData) {
+    try {
+      const data = JSON.parse(sessionData);
+      
+      // Préremplir le nom du conducteur et site si disponible
+      if (data.data && data.data.formData) {
+        const prevData = data.data.formData;
+        
+        // Préremplir le conducteur
+        const nomConducteurInput = document.getElementById('nomConducteur');
+        if (nomConducteurInput && prevData.nomConducteur) {
+          nomConducteurInput.value = prevData.nomConducteur;
+        }
+        
+        // Préremplir la date du jour
+        const dateInput = document.getElementById('dateDepart');
+        if (dateInput) {
+          dateInput.value = new Date().toISOString().split('T')[0];
+        }
+      }
+    } catch (error) {
+      console.error('❌ Erreur préchargement:', error);
+    }
+  }
+}
+
+// ========================================
+// 🔄 NAVIGATION
+// ========================================
+
+function goBackToPhase1() {
+  if (confirm('Voulez-vous vraiment retourner à la Phase 1 ? Les données non sauvegardées seront perdues.')) {
+    const baseUrl = window.location.href.split('?')[0].replace('index-phase2.html', '');
+    window.location.href = `${baseUrl}index-phase1.html?session=${sessionId}`;
+  }
+}
+
+function startMagasinEntry() {
+  console.log('🏪 Début de la saisie des magasins');
+  
+  if (validateGeneralData()) {
+    saveGeneralData();
+    currentStep = 2;
+    document.getElementById('step1').classList.remove('active');
+    document.getElementById('step2').classList.add('active');
+    
+    // Initialiser le premier magasin
+    initializeMagasinForm();
+    window.scrollTo(0, 0);
+  }
+}
+
+function backToMagasins() {
+  currentStep = 2;
+  document.getElementById('step3').classList.remove('active');
+  document.getElementById('step2').classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ========================================
+// ✅ VALIDATION
+// ========================================
+
+function validateGeneralData() {
+  console.log('🔍 Validation des données générales');
+  
+  const requiredInputs = document.getElementById('step1').querySelectorAll('[required]');
+  
+  for (let input of requiredInputs) {
+    const value = input.value ? input.value.trim() : '';
+    
+    if (!value) {
+      const label = input.closest('.input-group')?.querySelector('label')?.textContent || 'Champ inconnu';
+      alert(`Le champ "${label}" est obligatoire`);
+      input.focus();
+      return false;
+    }
+  }
+  
+  // Validation des radio buttons
+  const radioGroups = document.getElementById('step1').querySelectorAll('input[type="radio"][required]');
+  const radioGroupNames = [...new Set([...radioGroups].map(r => r.name))];
+  
+  for (let groupName of radioGroupNames) {
+    const checkedRadio = document.querySelector(`input[name="${groupName}"]:checked`);
+    if (!checkedRadio) {
+      alert(`Veuillez sélectionner une option pour "${groupName}"`);
+      return false;
+    }
+  }
+  
+  console.log('✅ Validation des données générales réussie');
+  return true;
+}
+
+function saveGeneralData() {
+  const step1 = document.getElementById('step1');
+  const inputs = step1.querySelectorAll('input, select, textarea');
+  
+  generalData = {};
+  
+  inputs.forEach(input => {
+    if (input.type === 'radio') {
+      if (input.checked) {
+        generalData[input.name] = input.value;
+      }
+    } else if (input.id) {
+      generalData[input.id] = input.value;
+    }
+  });
+  
+  console.log('💾 Données générales sauvegardées:', generalData);
+}
+
+// ========================================
+// 🏪 GESTION DYNAMIQUE DES MAGASINS
+// ========================================
+
+function initializeMagasinForm() {
+  currentMagasinIndex = 0;
+  magasins = [];
+  
+  // Réinitialiser le formulaire
+  clearMagasinForm();
+  
+  // Mettre à jour l'interface
+  updateMagasinCounter();
+  updateMagasinButtons();
+  
+  console.log('🏪 Formulaire magasin initialisé');
+}
+
+function clearMagasinForm() {
+  // Vider tous les champs du formulaire magasin
+  const form = document.getElementById('magasinForm');
+  const inputs = form.querySelectorAll('input, textarea');
+  
+  inputs.forEach(input => {
+    if (input.type === 'radio' || input.type === 'checkbox') {
+      input.checked = false;
+    } else {
+      input.value = '';
+    }
+  });
+  
+  // Réinitialiser les radio items
+  const radioItems = form.querySelectorAll('.radio-item');
+  radioItems.forEach(item => item.classList.remove('selected'));
+  
+  // Cacher la preview photo
+  const preview = document.getElementById('previewMagasinPhoto');
+  if (preview) {
+    preview.style.display = 'none';
+    preview.src = '';
+  }
+  
+  // Réinitialiser l'input photo
+  const photoInput = document.querySelector('[onclick*="magasinPhoto"]');
+  if (photoInput) {
+    photoInput.classList.remove('has-photo');
+    const textElement = photoInput.querySelector('.photo-text');
+    if (textElement) {
+      textElement.textContent = 'Photo reprises/anomalies';
+    }
+  }
+  
+  // Réinitialiser les photos
+  photos = {};
+}
+
+function updateMagasinCounter() {
+  const currentNumber = document.getElementById('currentMagasinNumber');
+  const totalNumber = document.getElementById('totalMagasins');
+  const status = document.getElementById('magasinStatus');
+  
+  if (currentNumber) currentNumber.textContent = currentMagasinIndex + 1;
+  if (totalNumber) totalNumber.textContent = magasins.length || '?';
+  
+  if (status) {
+    if (currentMagasinIndex < magasins.length) {
+      status.textContent = 'Modifié';
+      status.className = 'phase-counter warning';
+    } else {
+      status.textContent = 'En cours';
+      status.className = 'phase-counter';
+    }
+  }
+}
+
+function updateMagasinButtons() {
+  const btnPrevious = document.getElementById('btnPreviousMagasin');
+  const btnNext = document.getElementById('btnNextMagasin');
+  const btnFinish = document.getElementById('btnFinishDeliveries');
+  const btnValidate = document.getElementById('btnValidateMagasin');
+  
+  // Bouton précédent
+  if (btnPrevious) {
+    btnPrevious.style.display = currentMagasinIndex > 0 ? 'block' : 'none';
+  }
+  
+  // Bouton suivant
+  if (btnNext) {
+    btnNext.style.display = currentMagasinIndex < magasins.length - 1 ? 'block' : 'none';
+  }
+  
+  // Bouton terminer
+  if (btnFinish) {
+    btnFinish.style.display = magasins.length > 0 ? 'block' : 'none';
+  }
+  
+  // Texte bouton validation
+  if (btnValidate) {
+    if (currentMagasinIndex < magasins.length) {
+      btnValidate.textContent = '✏️ Modifier ce Magasin';
+    } else {
+      btnValidate.textContent = '✅ Valider ce Magasin';
+    }
+  }
+}
+
+function validateCurrentMagasin() {
+  console.log(`🔍 Validation magasin ${currentMagasinIndex + 1}`);
+  
+  // Validation des champs obligatoires
+  const form = document.getElementById('magasinForm');
+  const requiredInputs = form.querySelectorAll('[required]');
+  
+  for (let input of requiredInputs) {
+    const value = input.value ? input.value.trim() : '';
+    
+    if (!value) {
+      const label = input.closest('.input-group')?.querySelector('label')?.textContent || 'Champ inconnu';
+      alert(`Le champ "${label}" est obligatoire`);
+      input.focus();
+      return false;
+    }
+  }
+  
+  // Validation des radio buttons
+  const radioGroups = form.querySelectorAll('input[type="radio"][required]');
+  const radioGroupNames = [...new Set([...radioGroups].map(r => r.name))];
+  
+  for (let groupName of radioGroupNames) {
+    const checkedRadio = form.querySelector(`input[name="${groupName}"]:checked`);
+    if (!checkedRadio) {
+      alert(`Veuillez sélectionner une option`);
+      return false;
+    }
+  }
+  
+  // Validation photo obligatoire
+  if (!photos.magasinPhoto) {
+    alert('La photo des reprises ou anomalies est obligatoire');
+    return false;
+  }
+  
+  // Sauvegarder le magasin
+  saveMagasinData();
+  
+  console.log(`✅ Magasin ${currentMagasinIndex + 1} validé`);
+  return true;
+}
+
+function saveMagasinData() {
+  const form = document.getElementById('magasinForm');
+  const inputs = form.querySelectorAll('input, textarea');
+  
+  const magasinData = {
+    index: currentMagasinIndex,
+    timestamp: new Date().toISOString(),
+    photos: { ...photos }
+  };
+  
+  inputs.forEach(input => {
+    if (input.type === 'radio') {
+      if (input.checked) {
+        magasinData[input.name] = input.value;
+      }
+    } else if (input.id && input.id !== 'photoMagasinPhoto') {
+      magasinData[input.id] = input.value;
+    }
+  });
+  
+  // Sauvegarder ou mettre à jour
+  if (currentMagasinIndex < magasins.length) {
+    magasins[currentMagasinIndex] = magasinData;
+    console.log(`✏️ Magasin ${currentMagasinIndex + 1} mis à jour`);
+  } else {
+    magasins.push(magasinData);
+    console.log(`✅ Magasin ${magasins.length} ajouté`);
+  }
+  
+  updateValidatedSummary();
+  updateMagasinCounter();
+  updateMagasinButtons();
+  
+  // Envoyer immédiatement ce magasin vers Sheets
+  sendMagasinToServer(magasinData);
+}
+
+function sendMagasinToServer(magasinData) {
+  console.log('☁️ Envoi magasin vers serveur:', magasinData.nomMagasin);
+  
+  const dataToSend = {
+    sessionId: sessionId,
+    phase: 'suivi-livraisons',
+    timestamp: new Date().toISOString(),
+    generalData: generalData,
+    magasin: magasinData
+  };
+  
+  if (navigator.onLine) {
+    google.script.run
+      .withSuccessHandler((result) => {
+        console.log('✅ Magasin envoyé:', result);
+        showTemporaryNotification(`✅ ${magasinData.nomMagasin} sauvegardé`);
+      })
+      .withFailureHandler((error) => {
+        console.error('❌ Erreur envoi magasin:', error);
+        // Sauvegarder en offline
+        saveMagasinOffline(dataToSend);
+      })
+      .saveSingleMagasin(dataToSend);
+  } else {
+    saveMagasinOffline(dataToSend);
+  }
+}
+
+function saveMagasinOffline(data) {
+  try {
+    let offlineData = JSON.parse(localStorage.getItem('offlineData') || '[]');
+    offlineData.push(data);
+    localStorage.setItem('offlineData', JSON.stringify(offlineData));
+    showTemporaryNotification(`💾 ${data.magasin.nomMagasin} sauvegardé hors ligne`);
+  } catch (error) {
+    console.error('❌ Erreur sauvegarde offline:', error);
+  }
+}
+
+function showTemporaryNotification(message) {
+  // Créer notification temporaire
+  const notification = document.createElement('div');
+  notification.className = 'temporary-notification';
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: var(--color-success);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    z-index: 1001;
+    font-size: 14px;
+    animation: slideIn 0.3s ease-out;
+  `;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.animation = 'slideOut 0.3s ease-out forwards';
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+}
+
+function previousMagasin() {
+  if (currentMagasinIndex > 0) {
+    currentMagasinIndex--;
+    loadMagasinData(currentMagasinIndex);
+    updateMagasinCounter();
+    updateMagasinButtons();
+  }
+}
+
+function nextMagasin() {
+  if (currentMagasinIndex < magasins.length - 1) {
+    currentMagasinIndex++;
+    loadMagasinData(currentMagasinIndex);
+    updateMagasinCounter();
+    updateMagasinButtons();
+  }
+}
+
+function addAnotherMagasin() {
+  // Aller au prochain magasin (nouveau)
+  currentMagasinIndex = magasins.length;
+  clearMagasinForm();
+  updateMagasinCounter();
+  updateMagasinButtons();
+  
+  console.log(`➕ Ajout du magasin ${currentMagasinIndex + 1}`);
+}
+
+function loadMagasinData(index) {
+  if (index >= 0 && index < magasins.length) {
+    const magasinData = magasins[index];
+    const form = document.getElementById('magasinForm');
+    
+    // Remplir les champs
+    Object.keys(magasinData).forEach(key => {
+      if (key === 'photos' || key === 'index' || key === 'timestamp') return;
+      
+      const input = form.querySelector(`#${key}, input[name="${key}"]`);
+      if (input) {
+        if (input.type === 'radio') {
+          if (input.value === magasinData[key]) {
+            input.checked = true;
+            updateRadioDisplay(input.name);
+          }
+        } else {
+          input.value = magasinData[key] || '';
+        }
+      }
+    });
+    
+    // Charger les photos
+    photos = { ...magasinData.photos };
+    
+    if (photos.magasinPhoto) {
+      const preview = document.getElementById('previewMagasinPhoto');
+      if (preview) {
+        preview.src = URL.createObjectURL(new Blob([Utilities.base64Decode(photos.magasinPhoto.data)], { type: photos.magasinPhoto.type }));
+        preview.style.display = 'block';
+      }
+      
+      const photoInput = document.querySelector('[onclick*="magasinPhoto"]');
+      if (photoInput) {
+        photoInput.classList.add('has-photo');
+        const textElement = photoInput.querySelector('.photo-text');
+        if (textElement) {
+          textElement.textContent = '✅ Photo capturée';
+        }
+      }
+    }
+    
+    console.log(`📋 Données magasin ${index + 1} chargées`);
+  }
+}
+
+function updateValidatedSummary() {
+  const summary = document.getElementById('magasinsValidated');
+  const list = document.getElementById('validatedList');
+  
+  if (magasins.length > 0) {
+    summary.style.display = 'block';
+    
+    list.innerHTML = magasins.map((magasin, index) => `
+      <div class="validated-item">
+        <span class="validated-number">${index + 1}.</span>
+        <span class="validated-name">${magasin.nomMagasin || 'Magasin ' + (index + 1)}</span>
+        <span class="validated-status ${magasin.statutLivraison?.toLowerCase().replace(/\s+/g, '-') || ''}">${magasin.statutLivraison || 'Statut inconnu'}</span>
+        <button class="btn-edit-mini" onclick="editMagasin(${index})">✏️</button>
+      </div>
+    `).join('');
+  } else {
+    summary.style.display = 'none';
+  }
+}
+
+function editMagasin(index) {
+  currentMagasinIndex = index;
+  loadMagasinData(index);
+  updateMagasinCounter();
+  updateMagasinButtons();
+}
+
+function finishDeliveries() {
+  if (magasins.length === 0) {
+    alert('Aucun magasin n\'a été validé');
+    return;
+  }
+  
+  console.log(`🏁 Fin des livraisons: ${magasins.length} magasin(s)`);
+  
+  // Aller au récapitulatif
+  currentStep = 3;
+  document.getElementById('step2').classList.remove('active');
+  document.getElementById('step3').classList.add('active');
+  
+  generateSummary();
+  window.scrollTo(0, 0);
+}
+
+// ========================================
+// 📊 RÉCAPITULATIF
+// ========================================
+
+function generateSummary() {
+  // Résumé général
+  const generalSummary = document.getElementById('generalSummary');
+  generalSummary.innerHTML = `
+    <div class="summary-row"><strong>Date:</strong> ${generalData.dateDepart || 'Non renseignée'}</div>
+    <div class="summary-row"><strong>Cycle:</strong> ${generalData.cycle || 'Non renseigné'}</div>
+    <div class="summary-row"><strong>Type:</strong> ${generalData.typeLivraison || 'Non renseigné'}</div>
+    <div class="summary-row"><strong>Site:</strong> ${generalData.siteChargement || 'Non renseigné'}</div>
+    <div class="summary-row"><strong>Conducteur:</strong> ${generalData.nomConducteur || 'Non renseigné'}</div>
+    <div class="summary-row"><strong>Heure prévue:</strong> ${generalData.heureDepartPrevue || 'Non renseignée'}</div>
+  `;
+  
+  // Résumé magasins
+  const magasinsSummary = document.getElementById('magasinsSummary');
+  magasinsSummary.innerHTML = magasins.map((magasin, index) => `
+    <div class="summary-magasin">
+      <div class="summary-magasin-header">
+        <strong>${index + 1}. ${magasin.nomMagasin || 'Magasin ' + (index + 1)}</strong>
+        <span class="status-badge ${magasin.statutLivraison?.toLowerCase().replace(/\s+/g, '-') || ''}">${magasin.statutLivraison || 'Statut inconnu'}</span>
+      </div>
+      ${magasin.detailsLivraison ? `<div class="summary-details">${magasin.detailsLivraison}</div>` : ''}
+      <div class="summary-info">
+        <span>Reprises: ${magasin.reprisesContenants || 'Non renseigné'}</span>
+        ${magasin.anomalies ? `<span>Anomalies: Oui</span>` : ''}
+      </div>
+    </div>
+  `).join('');
+  
+  // Statistiques
+  const totalMagasinsCount = document.getElementById('totalMagasinsCount');
+  const livresCount = document.getElementById('livresCount');
+  const photosCount = document.getElementById('photosCount');
+  
+  const totalLivres = magasins.filter(m => m.statutLivraison === 'Livré').length;
+  const totalPhotos = magasins.reduce((acc, m) => acc + (m.photos ? Object.keys(m.photos).length : 0), 0);
+  
+  if (totalMagasinsCount) totalMagasinsCount.textContent = magasins.length;
+  if (livresCount) livresCount.textContent = totalLivres;
+  if (photosCount) photosCount.textContent = totalPhotos;
+}
+
+function completePhase2() {
+  console.log('🏁 Finalisation Phase 2 - Suivi des Livraisons');
+  
+  if (magasins.length === 0) {
+    alert('Aucun magasin n\'a été livré');
+    return;
+  }
+  
+  // Préparer les données finales
+  const finalData = {
+    sessionId: sessionId,
+    phase: 'suivi-livraisons',
+    timestamp: new Date().toISOString(),
+    generalData: generalData,
+    magasins: magasins,
+    magasinsCount: magasins.length
+  };
+  
+  const submitBtn = document.querySelector('.btn-success');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="loading"></span> Finalisation en cours...';
+  
+  if (navigator.onLine) {
+    sendPhase2ToServer(finalData);
+  } else {
+    savePhase2Offline(finalData);
+  }
+}
+
+function sendPhase2ToServer(data) {
+  console.log('☁️ Envoi Phase 2 vers serveur...');
+  
+  google.script.run
+    .withSuccessHandler(onPhase2Success)
+    .withFailureHandler(onPhase2Error)
+    .finalizePhase2Data(data);
+}
+
+function savePhase2Offline(data) {
+  console.log('💾 Sauvegarde Phase 2 hors ligne...');
+  try {
+    let offlineData = JSON.parse(localStorage.getItem('offlineData') || '[]');
+    offlineData.push(data);
+    localStorage.setItem('offlineData', JSON.stringify(offlineData));
+    
+    showTransitionMessage(
+      '✅ Phase 2 sauvegardée hors ligne', 
+      'Sera synchronisée à la reconnexion'
+    );
+  } catch (error) {
+    console.error('❌ Erreur sauvegarde offline:', error);
+    alert('Erreur sauvegarde hors ligne: ' + error.message);
+  }
+}
+
+function onPhase2Success(result) {
+  console.log('✅ Phase 2 envoyée avec succès:', result);
+  
+  showTransitionMessage(
+    '🎉 Livraisons terminées !', 
+    `${magasins.length} magasin(s) traité(s) avec succès`
+  );
+}
+
+function onPhase2Error(error) {
+  console.error('❌ Erreur envoi Phase 2:', error);
+  savePhase2Offline({
+    sessionId: sessionId,
+    phase: 'suivi-livraisons',
+    timestamp: new Date().toISOString(),
+    generalData: generalData,
+    magasins: magasins,
+    error: error.toString()
+  });
+}
+
+function showTransitionMessage(title, details) {
+  document.querySelectorAll('.step').forEach(step => step.style.display = 'none');
+  const container = document.querySelector('.form-container');
+  
+  container.innerHTML = `
+    <div class="success-message">
+      <div class="success-icon">🎉</div>
+      <h2 class="success-title">${title}</h2>
+      <p class="success-details">${details}</p>
+      <div class="transition-buttons">
+        <button class="btn btn-primary" onclick="goToPhase3()">
+          🏁 Commencer Fin de Service
+        </button>
+        <button class="btn btn-secondary" onclick="location.reload()">
+          🔄 Nouvelle Phase 2
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function goToPhase3() {
+  const baseUrl = window.location.href.split('?')[0].replace('index-phase2.html', '');
+  window.location.href = `${baseUrl}index-phase3.html?session=${sessionId}`;
+}
+
+// ========================================
+// 📸 GESTION PHOTOS (similaire à Phase 1)
+// ========================================
+
+function takePhoto(photoType) {
+  const inputId = `photo${photoType.charAt(0).toUpperCase() + photoType.slice(1)}`;
+  const input = document.getElementById(inputId);
+  
+  if (input) {
+    input.click();
+  } else {
+    console.error('❌ Input non trouvé:', inputId);
+  }
+}
+
+function initializeEventListeners() {
+  // Gestion des photos
+  const photoInputs = document.querySelectorAll('input[type="file"]');
+  
+  photoInputs.forEach(input => {
+    input.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      
+      if (file) {
+        const photoType = extractPhotoType(this.id);
+        processPhoto(file, photoType);
+      }
+    });
+  });
+  
+  // Radio buttons
+  const radioInputs = document.querySelectorAll('input[type="radio"]');
+  radioInputs.forEach(input => {
+    input.addEventListener('change', function() {
+      updateRadioDisplay(this.name);
+    });
+  });
+}
+
+function extractPhotoType(inputId) {
+  return inputId.replace('photo', '');
+}
+
+function processPhoto(file, photoType) {
+  console.log('🔄 Traitement photo:', photoType);
+  
+  if (file.size > 10 * 1024 * 1024) {
+    alert('La photo est trop voluminieuse (max 10MB)');
+    return;
+  }
+  
+  compressImage(file, (compressedFile) => {
+    // Preview
+    const previewId = `preview${photoType.charAt(0).toUpperCase() + photoType.slice(1)}`;
+    const preview = document.getElementById(previewId);
+    
+    if (preview) {
+      preview.src = URL.createObjectURL(compressedFile);
+      preview.style.display = 'block';
+    }
+    
+    // Update interface
+    const photoInput = document.querySelector(`[onclick*="${photoType}"]`);
+    if (photoInput) {
+      photoInput.classList.add('has-photo');
+      const textElement = photoInput.querySelector('.photo-text');
+      if (textElement) {
+        textElement.textContent = '✅ Photo capturée';
+      }
+    }
+    
+    // Stocker la photo
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      photos[photoType] = {
+        data: e.target.result.split(',')[1],
+        type: compressedFile.type,
+        name: `${photoType}_${sessionId}_${currentMagasinIndex}_${Date.now()}.jpg`,
+        size: compressedFile.size
+      };
+      
+      console.log('💾 Photo stockée:', photoType);
+    };
+    reader.readAsDataURL(compressedFile);
+  });
+}
+
+function compressImage(file, callback) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  
+  img.onload = function() {
+    const maxSize = 1200;
+    let { width, height } = img;
+    
+    if (width > height && width > maxSize) {
+      height = (height * maxSize) / width;
+      width = maxSize;
+    } else if (height > maxSize) {
+      width = (width * maxSize) / height;
+      height = maxSize;
+    }
+    
+    canvas.width = width;
+    canvas.height = height;
+    ctx.drawImage(img, 0, 0, width, height);
+    canvas.toBlob(callback, 'image/jpeg', 0.8);
+  };
+  
+  img.src = URL.createObjectURL(file);
+}
+
+function updateRadioDisplay(name) {
+  const radios = document.querySelectorAll(`input[name="${name}"]`);
+  radios.forEach(radio => {
+    const container = radio.closest('.radio-item');
+    if (container) {
+      if (radio.checked) {
+        container.classList.add('selected');
+      } else {
+        container.classList.remove('selected');
+      }
+    }
+  });
+}
+
+// ========================================
+// 🔄 CONNEXION & STATUT
+// ========================================
+
+function updateConnectionStatus() {
+  const indicator = document.getElementById('connectionStatus');
+  if (navigator.onLine) {
+    indicator.innerHTML = '🟢 En ligne';
+    indicator.className = 'offline-indicator online';
+  } else {
+    indicator.innerHTML = '🔴 Hors ligne';
+    indicator.className = 'offline-indicator offline';
+  }
+}
+
+function checkPendingData() {
+  const offlineData = JSON.parse(localStorage.getItem('offlineData') || '[]');
+  if (offlineData.length > 0) {
+    const indicator = document.getElementById('pendingIndicator');
+    if (indicator) {
+      indicator.innerHTML = `📤 ${offlineData.length} données en attente`;
+      indicator.style.display = 'block';
+    }
+  }
+}
+
+window.addEventListener('online', updateConnectionStatus);
+window.addEventListener('offline', updateConnectionStatus);
+
+// Navigation vers l'accueil
+function goToHome() {
+  if (confirm('🏠 Retourner à l\'accueil ?\n\nLes données de cette session seront sauvegardées localement.')) {
+    const homeUrl = 'https://script.google.com/macros/s/AKfycbzm4fmWu41vXRFJLnJQSWXNlGxxDwhue73q0rDVjV1xsk-rl47vE1kq0tLep1Q2nz3D/exec';
+    
+    console.log('🏠 Retour accueil:', homeUrl);
+    window.location.href = homeUrl;
+  }
+}
+
+// ========================================
+// 🛠️ FONCTIONS DEBUG
+// ========================================
+
+function debugPhase2() {
+  console.log('🔍 === DEBUG PHASE 2 ===');
+  console.log(`📍 Session ID: ${sessionId}`);
+  console.log(`📍 Étape actuelle: ${currentStep}`);
+  console.log(`📋 Données générales:`, generalData);
+  console.log(`🏪 Magasins (${magasins.length}):`, magasins);
+  console.log(`📸 Photos actuelles:`, photos);
+  
+  return {
+    sessionId,
+    currentStep,
+    generalData,
+    magasins: magasins.length,
+    currentMagasinIndex
+  };
+}
+
+window.debugPhase2 = debugPhase2;
+</script>

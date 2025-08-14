@@ -1,0 +1,3789 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suivi Conducteurs - Application Mobile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================ */
+    /* 🎨 FIGMA 2025 DESIGN SYSTEM MOBILE-FIRST */
+    /* ============================================ */
+    
+    :root {
+      /* 🎨 PALETTE PORTAIL MODERNE */
+      --bg-primary: #FAF9F6;
+      --bg-secondary: #F5F2ED;
+      --bg-tertiary: #FFFFFF;
+      --bg-card: #FFFFFF;
+      
+      --text-primary: #1E293B;
+      --text-secondary: #475569;
+      --text-tertiary: #64748B;
+      --text-muted: #94a3b8;
+      --text-white: #ffffff;
+      
+      --accent-primary: #14B8A6;
+      --accent-hover: #0D9488;
+      --accent-light: rgba(20, 184, 166, 0.1);
+      
+      --primary-color: #14B8A6;
+      --primary-light: #5EEAD4;
+      --primary-dark: #0D9488;
+      --primary-gradient: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%);
+      
+      --secondary-color: #10B981;
+      --success-color: #10B981;
+      --error-color: #EF4444;
+      --warning-color: #F59E0B;
+      --danger-color: #EF4444;
+      
+      --border-primary: #E5E7EB;
+      --border-secondary: #D1D5DB;
+      
+      /* 🎨 Ombres modernes */
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-xl: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      
+      /* 🎨 Glassmorphism */
+      --glass-bg: rgba(255, 255, 255, 0.25);
+      --glass-border: rgba(255, 255, 255, 0.18);
+      --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      --glass-backdrop: blur(4px);
+      
+      /* 📏 Espacement */
+      --spacing-xs: 0.25rem;
+      --spacing-sm: 0.5rem;
+      --spacing-md: 1rem;
+      --spacing-lg: 1.5rem;
+      --spacing-xl: 2rem;
+      --spacing-xxl: 3rem;
+      
+      /* 📐 Rayons */
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+      
+      /* 🎭 Animations */
+      --transition-fast: 0.15s ease;
+      --transition-normal: 0.3s ease;
+      --transition-slow: 0.5s ease;
+    }
+    
+    /* ============================================ */
+    /* 📱 BASE MOBILE-FIRST */
+    /* ============================================ */
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: var(--spacing-sm);
+      overflow-x: hidden;
+      font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+      font-optical-sizing: auto;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+    
+    /* ============================================ */
+    /* 🏗️ LAYOUT PRINCIPAL */
+    /* ============================================ */
+    
+    .app-container {
+      max-width: 100vw;
+      margin: 0 auto;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      min-height: calc(100vh - var(--spacing-md));
+    }
+    
+    /* ============================================ */
+    /* 📱 HEADER MOBILE - FIGMA 2025 */
+    /* ============================================ */
+    
+    .app-header {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      padding: var(--spacing-xl) var(--spacing-md);
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+      border-bottom: 1px solid var(--border-primary);
+    }
+    
+    .app-title {
+      font-size: 32px;
+      font-weight: 600;
+      margin: 0;
+      color: var(--accent-primary);
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    
+    .app-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      font-weight: 300;
+    }
+    
+    /* ============================================ */
+    /* 🧭 NAVIGATION MOBILE - FIGMA 2025 */
+    /* ============================================ */
+    
+    .nav-bar {
+      background: var(--bg-tertiary);
+      border-top: 1px solid var(--border-primary);
+      padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-around;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: var(--text-tertiary);
+      font-size: 10px;
+      font-weight: 500;
+      padding: 8px 12px;
+      min-width: 64px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-radius: 8px;
+      min-height: 44px;
+      justify-content: center;
+    }
+    
+    .nav-item:active {
+      transform: scale(0.95);
+    }
+    
+    .nav-item.active {
+      color: var(--accent-primary);
+      background: var(--accent-light);
+    }
+    
+    .nav-item .icon {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+    
+    .nav-label {
+      font-size: 10px;
+      font-weight: 500;
+    }
+    
+    /* ============================================ */
+    /* 📄 SECTIONS / PAGES */
+    /* ============================================ */
+    
+    .section {
+      display: none;
+      padding: var(--spacing-md);
+      padding-bottom: 80px; /* Espace pour nav bottom */
+      min-height: calc(100vh - 120px);
+    }
+    
+    .section.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* ============================================ */
+    /* 🔘 BOUTONS MOBILES - FIGMA 2025 */
+    /* ============================================ */
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-md) var(--spacing-lg);
+      border: none;
+      border-radius: var(--radius-lg);
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      min-height: 48px;
+      width: 100%;
+      margin-bottom: var(--spacing-md);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+    
+    .btn:hover::before {
+      left: 100%;
+    }
+    
+    .btn-primary {
+      background: var(--accent-primary);
+      color: white;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--accent-primary);
+    }
+    
+    .btn-primary:hover, .btn-primary:focus {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--accent-primary);
+      border: 1px solid var(--border-primary);
+      box-shadow: var(--shadow);
+    }
+    
+    .btn-secondary:hover, .btn-secondary:focus {
+      background: var(--bg-secondary);
+      border-color: var(--border-secondary);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .btn-success {
+      background: var(--success-color);
+      color: white;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--success-color);
+    }
+    
+    .btn-warning {
+      background: var(--warning-color);
+      color: white;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--warning-color);
+    }
+    
+    .btn-danger {
+      background: var(--error-color);
+      color: white;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--error-color);
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+    
+    /* ============================================ */
+    /* 🏠 PAGE ACCUEIL */
+    /* ============================================ */
+    
+    .welcome-section {
+      text-align: center;
+      margin-bottom: var(--spacing-xl);
+    }
+    
+    .welcome-icon {
+      font-size: 4rem;
+      margin-bottom: var(--spacing-md);
+    }
+    
+    .welcome-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-sm);
+    }
+    
+    .welcome-description {
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    
+    .quick-actions {
+      margin-bottom: var(--spacing-xl);
+    }
+    
+    .action-grid {
+      display: grid;
+      gap: var(--spacing-md);
+    }
+    
+    .action-card {
+      background: var(--bg-tertiary);
+      border-radius: 10px;
+      padding: var(--spacing-xl);
+      text-align: center;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-primary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .action-card:hover, .action-card:focus {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--border-secondary);
+    }
+    
+    .action-icon {
+      font-size: 2.5rem;
+      margin-bottom: var(--spacing-md);
+    }
+    
+    .action-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: var(--spacing-sm);
+      color: var(--text-primary);
+    }
+    
+    .action-description {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+    
+    /* ============================================ */
+    /* 📱 RESPONSIVE DESKTOP */
+    /* ============================================ */
+    
+    @media (min-width: 768px) {
+      body {
+        padding: var(--spacing-lg);
+      }
+      
+      .app-container {
+        max-width: 768px;
+        margin: 0 auto;
+      }
+      
+      .nav-bar {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        right: auto;
+        border-top: none;
+        border-bottom: 1px solid var(--bg-tertiary);
+        order: -1;
+      }
+      
+      .section {
+        padding-bottom: var(--spacing-md);
+      }
+      
+      .action-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .app-container {
+        max-width: 1024px;
+      }
+      
+      .action-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    
+    /* ============================================ */
+    /* 🎯 STATUS INDICATORS - FIGMA 2025 */
+    /* ============================================ */
+    
+    .status-indicator {
+      position: absolute;
+      top: var(--spacing-md);
+      right: var(--spacing-md);
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      z-index: 50;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+    }
+    
+    .status-online {
+      background: var(--success-color);
+      color: white;
+      box-shadow: var(--shadow);
+    }
+    
+    .status-offline {
+      background: var(--error-color);
+      color: white;
+      box-shadow: var(--shadow);
+    }
+    
+    .status-indicator::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    /* ============================================ */
+    /* 🚛 PHASE 1 - CONTRÔLES STYLES */
+    /* ============================================ */
+    
+    .progress-container {
+      margin-bottom: var(--spacing-lg);
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--bg-tertiary);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: var(--spacing-sm);
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: var(--primary-gradient);
+      border-radius: 999px;
+      transition: width var(--transition-normal);
+    }
+    
+    .progress-text {
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    
+    .step-container {
+      display: none;
+      padding: var(--spacing-lg);
+      background: var(--bg-tertiary);
+      border-radius: 10px;
+      margin-bottom: var(--spacing-lg);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-primary);
+    }
+    
+    .step-container.active {
+      display: block;
+      animation: slideIn var(--transition-normal) ease;
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    .step-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .info-card, .reminder-card {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-lg);
+      border: 1px solid var(--border-primary);
+      box-shadow: var(--shadow);
+    }
+    
+    .info-card h4, .reminder-card h4 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-md);
+    }
+    
+    .detail-grid {
+      display: grid;
+      gap: var(--spacing-sm);
+    }
+    
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--spacing-sm);
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      border: 1px solid var(--border-primary);
+    }
+    
+    .detail-item .label {
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+    
+    .detail-item .value {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .form-group {
+      margin-bottom: var(--spacing-lg);
+    }
+    
+    .form-group label {
+      display: block;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-sm);
+    }
+    
+    .form-group label.required::after {
+      content: ' *';
+      color: var(--error-color);
+    }
+    
+    .form-group input[type="text"],
+    .form-group input[type="number"] {
+      width: 100%;
+      padding: var(--spacing-md);
+      border: 1px solid var(--border-primary);
+      border-radius: 6px;
+      font-size: 12px;
+      transition: border-color var(--transition-fast);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 2px var(--accent-light);
+    }
+    
+    .radio-group {
+      display: grid;
+      gap: var(--spacing-sm);
+    }
+    
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-md);
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-primary);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    
+    .radio-option:hover {
+      border-color: var(--accent-primary);
+      background: var(--accent-light);
+    }
+    
+    .radio-option input[type="radio"] {
+      display: none;
+    }
+    
+    .radio-custom {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-secondary);
+      border-radius: 50%;
+      position: relative;
+      transition: all var(--transition-fast);
+      flex-shrink: 0;
+    }
+    
+    .radio-option input[type="radio"]:checked + .radio-custom {
+      border-color: var(--accent-primary);
+      background: var(--accent-primary);
+    }
+    
+    .radio-option input[type="radio"]:checked + .radio-custom::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    .radio-text {
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    
+    .photo-upload {
+      border: 2px dashed var(--border-primary);
+      border-radius: 8px;
+      padding: var(--spacing-lg);
+      text-align: center;
+      transition: border-color var(--transition-fast);
+      background: var(--bg-secondary);
+    }
+    
+    .photo-upload:hover {
+      border-color: var(--accent-primary);
+    }
+    
+    .photo-upload input[type="file"] {
+      display: none;
+    }
+    
+    .photo-label {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-md) var(--spacing-lg);
+      background: var(--accent-primary);
+      color: white;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      box-shadow: var(--shadow);
+    }
+    
+    .photo-label:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .photo-preview {
+      margin-top: var(--spacing-md);
+    }
+    
+    .photo-preview img {
+      max-width: 200px;
+      max-height: 200px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-primary);
+    }
+    
+    .step-navigation {
+      display: flex;
+      gap: var(--spacing-md);
+      margin-top: var(--spacing-lg);
+    }
+    
+    .step-navigation .btn {
+      flex: 1;
+    }
+    
+    .main-navigation {
+      margin-top: var(--spacing-xl);
+      padding-top: var(--spacing-lg);
+      border-top: 1px solid var(--border-primary);
+    }
+    
+    /* ============================================ */
+    /* 🔧 UTILITAIRES */
+    /* ============================================ */
+    
+    .text-center { text-align: center; }
+    .text-left { text-align: left; }
+    .text-right { text-align: right; }
+    
+    .mt-sm { margin-top: var(--spacing-sm); }
+    .mt-md { margin-top: var(--spacing-md); }
+    .mt-lg { margin-top: var(--spacing-lg); }
+    
+    .mb-sm { margin-bottom: var(--spacing-sm); }
+    .mb-md { margin-bottom: var(--spacing-md); }
+    .mb-lg { margin-bottom: var(--spacing-lg); }
+    
+    .hidden { display: none !important; }
+    .visible { display: block !important; }
+    
+  </style>
+</head>
+<body>
+  
+  <!-- 🏗️ CONTAINER PRINCIPAL -->
+  <div class="app-container">
+    
+    <!-- 📱 HEADER -->
+    <header class="app-header">
+      <h1 class="app-title">Suivi Conducteurs</h1>
+      <p class="app-subtitle">Application Mobile de Tournée</p>
+    </header>
+    
+    <!-- 🔄 STATUS CONNECTION - Integré dans le header -->
+    <div id="connectionStatus" class="status-indicator status-online">
+      <span id="syncStatus">En ligne</span>
+      <button class="btn-retry" id="retrySync" onclick="uploadAllPendingPhotos()" style="display: none; margin-left: 8px; padding: 4px 8px; font-size: 10px; background: var(--warning); color: white; border: none; border-radius: 4px;">
+        🔄 Retry
+      </button>
+    </div>
+    
+    <!-- 🧭 NAVIGATION MOBILE -->
+    <nav class="nav-bar">
+      <a href="#" class="nav-item active" onclick="showSection('home')" id="nav-home">
+        <span class="icon">🏠</span>
+        <span class="nav-label">Accueil</span>
+      </a>
+      <a href="#" class="nav-item" onclick="showSection('phase0')" id="nav-phase0">
+        <span class="icon">👤</span>
+        <span class="nav-label">Connexion</span>
+      </a>
+      <a href="#" class="nav-item" onclick="showSection('phase1')" id="nav-phase1">
+        <span class="icon">🚛</span>
+        <span class="nav-label">Contrôles</span>
+      </a>
+      <a href="#" class="nav-item" onclick="showSection('phase2')" id="nav-phase2">
+        <span class="icon">📦</span>
+        <span class="nav-label">Livraisons</span>
+      </a>
+      <a href="#" class="nav-item" onclick="showSection('phase3')" id="nav-phase3">
+        <span class="icon">✅</span>
+        <span class="nav-label">Fin</span>
+      </a>
+    </nav>
+    
+    <!-- ============================================ -->
+    <!-- 🏠 SECTION ACCUEIL -->
+    <!-- ============================================ -->
+    <section id="home" class="section active">
+      
+      <div class="welcome-section">
+        <div class="welcome-icon">🚛</div>
+        <h2 class="welcome-title">Bienvenue !</h2>
+        <p class="welcome-description">
+          Gérez votre tournée étape par étape avec l'application mobile de suivi des conducteurs.
+        </p>
+      </div>
+      
+      <div class="quick-actions">
+        <h3 class="text-center mb-lg">Actions Rapides</h3>
+        
+        <div class="action-grid">
+          
+          <button class="action-card" onclick="startNewTour()">
+            <div class="action-icon">🚀</div>
+            <h4 class="action-title">Nouvelle Tournée</h4>
+            <p class="action-description">Commencer une nouvelle tournée depuis le début</p>
+          </button>
+          
+          <button class="action-card" onclick="showSection('resumeSession')">
+            <div class="action-icon">🔄</div>
+            <h4 class="action-title">Reprendre Session</h4>
+            <p class="action-description">Continuer une tournée en cours</p>
+          </button>
+          
+          <button class="action-card" onclick="showSection('sessionHistory')">
+            <div class="action-icon">📊</div>
+            <h4 class="action-title">Historique</h4>
+            <p class="action-description">Voir les tournées précédentes</p>
+          </button>
+          
+        </div>
+      </div>
+      
+    </section>
+    
+    <!-- ============================================ -->
+    <!-- 👤 SECTION PHASE 0 - CONNEXION -->
+    <!-- ============================================ -->
+    <section id="phase0" class="section">
+      <h2 class="text-center mb-lg">👤 Identification Conducteur</h2>
+      
+      <div style="background: white; padding: var(--spacing-lg); border-radius: var(--radius-lg); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        
+        <div class="mb-lg">
+          <label for="conducteurCode" style="display: block; font-weight: 500; margin-bottom: var(--spacing-sm); color: var(--text-primary);">
+            Code Conducteur (4 chiffres)
+          </label>
+          <input 
+            type="number" 
+            id="conducteurCode" 
+            placeholder="Ex: 1001" 
+            min="1000" 
+            max="9999"
+            style="width: 100%; padding: var(--spacing-md); border: 2px solid var(--bg-tertiary); border-radius: var(--radius-md); font-size: 1.125rem; text-align: center;"
+          >
+        </div>
+        
+        <button class="btn btn-primary" onclick="connectConducteur()">
+          🔐 Se Connecter
+        </button>
+        
+        <!-- Zone résultat connexion -->
+        <div id="conducteurResult" class="hidden mt-lg">
+          <!-- Sera rempli dynamiquement -->
+        </div>
+        
+        <!-- Étape 2: Sélection véhicules -->
+        <div id="vehicleSelection" class="hidden mt-lg" style="background: var(--bg-tertiary); padding: var(--spacing-lg); border-radius: var(--radius-lg); border: 1px solid var(--border-primary);">
+          <h3 style="margin-bottom: var(--spacing-lg); color: var(--text-primary);">🚛 Sélection des Véhicules</h3>
+          
+          <div class="info-card" style="margin-bottom: var(--spacing-lg);">
+            <h4>📋 Informations Tournée</h4>
+            <div class="form-group">
+              <label for="dateTournee" class="required">Date de la tournée</label>
+              <input type="date" id="dateTournee" required style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-primary);">
+            </div>
+            
+            <div class="form-group">
+              <label for="heureTournee" class="required">Heure prévue de départ</label>
+              <input type="time" id="heureTournee" required style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-primary);">
+            </div>
+            
+            <div class="form-group">
+              <label>Type de tournée</label>
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input type="radio" name="typeTournee" value="1er Tour" checked>
+                  <span class="radio-custom"></span>
+                  <span class="radio-text">1er Tour</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="typeTournee" value="2ème Tour">
+                  <span class="radio-custom"></span>
+                  <span class="radio-text">2ème Tour</span>
+                </label>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Type de livraison</label>
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input type="radio" name="typeLivraison" value="Frais" checked>
+                  <span class="radio-custom"></span>
+                  <span class="radio-text">Frais</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="typeLivraison" value="Sec">
+                  <span class="radio-custom"></span>
+                  <span class="radio-text">Sec</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="selectTracteur" class="required">Tracteur</label>
+            <select id="selectTracteur" required style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-primary);">
+              <option value="">Sélectionner un tracteur...</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="selectRemorque" class="required">Remorque / Porteur</label>
+            <select id="selectRemorque" required style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-primary);">
+              <option value="">Sélectionner une remorque...</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="commentairesVehicules">Observations véhicules</label>
+            <textarea id="commentairesVehicules" rows="2" placeholder="Remarques sur l'état des véhicules..." style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-primary); resize: vertical;"></textarea>
+          </div>
+          
+          <button class="btn btn-primary" onclick="validateVehicleSelection()">
+            ✅ Valider et Continuer
+          </button>
+        </div>
+        
+      </div>
+      
+    </section>
+    
+    <!-- ============================================ -->
+    <!-- 🚛 SECTION PHASE 1 - CONTRÔLES -->
+    <!-- ============================================ -->
+    <section id="phase1" class="section">
+      <h2 class="text-center mb-lg">🚛 Contrôles Prise de Service</h2>
+      
+      <!-- Progress Bar -->
+      <div class="progress-container" style="margin-bottom: var(--spacing-lg);">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+        </div>
+        <div class="progress-text">
+          <span id="progressText">Étape 1 sur 6</span>
+        </div>
+      </div>
+      
+      <!-- Étape 1: Récapitulatif -->
+      <div class="step-container active" id="step1">
+        <h3 class="step-title">👤 Récapitulatif Session</h3>
+        
+        <div class="info-card">
+          <h4>📋 Informations de la Tournée</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="label">Conducteur :</span>
+              <span class="value" id="recapConducteur">Chargement...</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Site :</span>
+              <span class="value" id="recapSite">Chargement...</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Date :</span>
+              <span class="value" id="recapDate">Chargement...</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Heure :</span>
+              <span class="value" id="recapHeure">Chargement...</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Tour :</span>
+              <span class="value" id="recapTour">Chargement...</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Type :</span>
+              <span class="value" id="recapType">Chargement...</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Tracteur :</span>
+              <span class="value" id="recapTracteur">Chargement...</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Remorque :</span>
+              <span class="value" id="recapRemorque">Chargement...</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="reminder-card">
+          <h4>🚛 Contrôles de Prise de Service</h4>
+          <p>Vous allez maintenant effectuer les contrôles obligatoires avant le départ :</p>
+          <ul>
+            <li>État du tracteur (dégâts, kilométrage, carburant)</li>
+            <li>État de la remorque (dégâts, hayon, éclairage)</li>
+            <li>Vérification du chargement</li>
+            <li>Photos de contrôle</li>
+          </ul>
+        </div>
+        
+        <div class="form-group">
+          <label for="numeroContrat" class="required">Tour ou numéro de contrat</label>
+          <input type="text" id="numeroContrat" placeholder="Ex: T001, Contrat 12345..." required>
+        </div>
+        
+        <button class="btn btn-primary" onclick="nextPhase1Step()">
+          Suivant - Tracteur →
+        </button>
+      </div>
+      
+      <!-- Étape 2: Tracteur -->
+      <div class="step-container" id="step2">
+        <h3 class="step-title">🚛 Tracteur</h3>
+        
+        <div class="form-group">
+          <label for="immatTracteur">Immatriculation tracteur</label>
+          <input type="text" id="immatTracteur" readonly required style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-secondary); color: var(--text-primary);">
+          <small style="color: var(--text-secondary); font-size: 11px;">🔒 Véhicule sélectionné en Phase 0</small>
+        </div>
+        
+        <div class="form-group">
+          <label>Nouveaux dégâts constatés tracteur ?</label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="degatsTracteur" value="Non" checked onclick="hideDegatsTracteurDetails()">
+              <span class="radio-custom"></span>
+              <span class="radio-text">Non</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="degatsTracteur" value="Oui" onclick="showDegatsTracteurDetails()">
+              <span class="radio-custom"></span>
+              <span class="radio-text">Oui</span>
+            </label>
+          </div>
+        </div>
+        
+        <!-- Détails dégâts tracteur (masqué par défaut) -->
+        <div class="form-group" id="degatsTracteurDetails" style="display: none;">
+          <label for="detailsDegatsTracteur">Détails des dégâts tracteur</label>
+          <textarea id="detailsDegatsTracteur" rows="3" placeholder="Décrivez les dégâts constatés..." style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px;"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="kilometrage" class="required">Kilométrage</label>
+          <input type="number" id="kilometrage" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="required">Photo niveau carburant</label>
+          <div class="photo-upload">
+            <input type="file" id="photoCarburant" accept="image/*" capture="environment">
+            <label for="photoCarburant" class="photo-label">
+              ⛽ Prendre photo carburant
+            </label>
+            <div class="photo-preview" id="previewCarburant"></div>
+          </div>
+        </div>
+        
+        <div class="step-navigation">
+          <button class="btn btn-secondary" onclick="prevPhase1Step()">← Précédent</button>
+          <button class="btn btn-primary" onclick="nextPhase1Step()">Suivant - Photos Tracteur →</button>
+        </div>
+      </div>
+      
+      <!-- Étape 3: Photos Tracteur -->
+      <div class="step-container" id="step3">
+        <h3 class="step-title">📸 Photos Tracteur</h3>
+        
+        <div class="form-group">
+          <label>Photos face avant tracteur <small>(max 3)</small></label>
+          <div class="photo-upload">
+            <input type="file" id="photoFaceAvant" accept="image/*" capture="environment" multiple>
+            <label for="photoFaceAvant" class="photo-label">
+              📷 Ajouter photo(s) face avant
+            </label>
+            <div class="photo-preview" id="previewFaceAvant"></div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Photo côté passager</label>
+          <div class="photo-upload">
+            <input type="file" id="photoCotePassager" accept="image/*" capture="environment">
+            <label for="photoCotePassager" class="photo-label">
+              📷 Photo côté passager
+            </label>
+            <div class="photo-preview" id="previewCotePassager"></div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Photo côté conducteur</label>
+          <div class="photo-upload">
+            <input type="file" id="photoCoteConducteur" accept="image/*" capture="environment">
+            <label for="photoCoteConducteur" class="photo-label">
+              📷 Photo côté conducteur
+            </label>
+            <div class="photo-preview" id="previewCoteConducteur"></div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="commentairesTracteur">Commentaires tracteur</label>
+          <textarea id="commentairesTracteur" rows="3" placeholder="Observations sur l'état du tracteur..." style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-primary); resize: vertical;"></textarea>
+        </div>
+        
+        <div class="step-navigation">
+          <button class="btn btn-secondary" onclick="prevPhase1Step()">← Précédent</button>
+          <button class="btn btn-primary" onclick="nextPhase1Step()">Suivant - Remorque →</button>
+        </div>
+      </div>
+      
+      <!-- Étape 4: Remorque -->
+      <div class="step-container" id="step4">
+        <h3 class="step-title">🚚 Remorque et Hayon</h3>
+        
+        <div class="info-card">
+          <h4>⚠️ Consigne Branchement ABS</h4>
+          <p>Avant tout branchement, coupez systématiquement le contact afin d'éviter tout dysfonctionnement.</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="immatRemorque">Immatriculation remorque</label>
+          <input type="text" id="immatRemorque" readonly required style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-secondary); color: var(--text-primary);">
+          <small style="color: var(--text-secondary); font-size: 11px;">🔒 Véhicule sélectionné en Phase 0</small>
+        </div>
+        
+        <div class="form-group">
+          <label>Nouveaux dégâts constatés remorque ?</label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="degatsRemorque" value="Non" checked onclick="hideDegatsRemorqueDetails()">
+              <span class="radio-custom"></span>
+              <span class="radio-text">Non</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="degatsRemorque" value="Oui" onclick="showDegatsRemorqueDetails()">
+              <span class="radio-custom"></span>
+              <span class="radio-text">Oui</span>
+            </label>
+          </div>
+        </div>
+        
+        <!-- Détails dégâts remorque (masqué par défaut) -->
+        <div class="form-group" id="degatsRemorqueDetails" style="display: none;">
+          <label for="detailsDegatsRemorque">Détails des dégâts remorque</label>
+          <textarea id="detailsDegatsRemorque" rows="3" placeholder="Décrivez les dégâts constatés..." style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px;"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>Photo jauge carburant remorque</label>
+          <div class="photo-upload">
+            <input type="file" id="photoCarburantRemorque" accept="image/*" capture="environment">
+            <label for="photoCarburantRemorque" class="photo-label">
+              ⛽ Photo jauge remorque
+            </label>
+            <div class="photo-preview" id="previewCarburantRemorque"></div>
+          </div>
+          <small style="color: var(--text-secondary); font-size: 11px;">Si porteur, passer à la suite</small>
+        </div>
+        
+        <div class="form-group">
+          <label class="required">Test hayon (photo hayon déployé)</label>
+          <div class="photo-upload">
+            <input type="file" id="photoHayon" accept="image/*" capture="environment">
+            <label for="photoHayon" class="photo-label">
+              🔧 Photo hayon déployé
+            </label>
+            <div class="photo-preview" id="previewHayon"></div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="commentairesRemorque">Commentaires remorque</label>
+          <textarea id="commentairesRemorque" rows="3" placeholder="Précisions sur les dégâts ou autres observations..." style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-primary); resize: vertical;"></textarea>
+        </div>
+        
+        <div class="step-navigation">
+          <button class="btn btn-secondary" onclick="prevPhase1Step()">← Précédent</button>
+          <button class="btn btn-primary" onclick="nextPhase1Step()">Suivant - Chargement →</button>
+        </div>
+      </div>
+      
+      <!-- Étape 5: Chargement -->
+      <div class="step-container" id="step5">
+        <h3 class="step-title">📦 Vérification Chargement</h3>
+        
+        <div class="form-group">
+          <label>Photo du chargement</label>
+          <div class="photo-upload">
+            <input type="file" id="photoChargement" accept="image/*" capture="environment">
+            <label for="photoChargement" class="photo-label">
+              📦 Photo chargement
+            </label>
+            <div class="photo-preview" id="previewChargement"></div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Photo remorque portes fermées</label>
+          <div class="photo-upload">
+            <input type="file" id="photoRemorquePortes" accept="image/*" capture="environment">
+            <label for="photoRemorquePortes" class="photo-label">
+              🚪 Photo portes fermées
+            </label>
+            <div class="photo-preview" id="previewRemorquePortes"></div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Chargement conforme ?</label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="chargementConforme" value="Oui" checked>
+              <span class="radio-custom"></span>
+              <span class="radio-text">Oui, conforme</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="chargementConforme" value="Non">
+              <span class="radio-custom"></span>
+              <span class="radio-text">Non, anomalie</span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="commentairesChargement">Commentaires chargement</label>
+          <textarea id="commentairesChargement" rows="3" placeholder="Observations sur le chargement..." style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-primary); resize: vertical;"></textarea>
+        </div>
+        
+        <div class="step-navigation">
+          <button class="btn btn-secondary" onclick="prevPhase1Step()">← Précédent</button>
+          <button class="btn btn-primary" onclick="nextPhase1Step()">Finaliser →</button>
+        </div>
+      </div>
+      
+      <!-- Étape 6: Finalisation -->
+      <div class="step-container" id="step6">
+        <h3 class="step-title">✅ Finalisation Prise de Service</h3>
+        
+        <div class="info-card">
+          <h4>🎉 Contrôles Terminés</h4>
+          <p>Tous les contrôles de prise de service ont été effectués. Vérifiez le récapitulatif ci-dessous avant de continuer.</p>
+        </div>
+        
+        <div class="reminder-card">
+          <h4>📋 Récapitulatif Final</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="label">Photos prises :</span>
+              <span class="value" id="finalPhotosCount">0</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Dégâts signalés :</span>
+              <span class="value" id="finalDegats">Aucun</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Chargement :</span>
+              <span class="value" id="finalChargement">Conforme</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="heureDepart" class="required">Heure de départ réelle</label>
+          <input type="time" id="heureDepart" required style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-primary);">
+        </div>
+        
+        <div class="form-group">
+          <label for="commentairesFinaux">Commentaires finaux</label>
+          <textarea id="commentairesFinaux" rows="3" placeholder="Observations générales sur la prise de service..." style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-primary); resize: vertical;"></textarea>
+        </div>
+        
+        <div class="step-navigation">
+          <button class="btn btn-secondary" onclick="prevPhase1Step()">← Précédent</button>
+          <button class="btn btn-success" onclick="completePhase1()" style="font-size: 1.1rem; padding: var(--spacing-lg);">
+            ✅ Terminer Prise de Service
+          </button>
+        </div>
+      </div>
+      
+      <!-- Navigation principale -->
+      <div class="main-navigation">
+        <button class="btn btn-secondary" onclick="showSection('phase0')">
+          👤 Retour Connexion
+        </button>
+        <button class="btn btn-success" onclick="showSection('phase2')" style="display: none;" id="btnPhase2">
+          📦 Continuer vers Livraisons
+        </button>
+      </div>
+      
+    </section>
+    
+    <!-- ============================================ -->
+    <!-- 📦 SECTION PHASE 2 - LIVRAISONS -->
+    <!-- ============================================ -->
+    <section id="phase2" class="section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">📦 Suivi des Livraisons</h2>
+          <div class="progress-indicator">
+            <span id="livraisonProgress">0 / 0 magasins</span>
+          </div>
+        </div>
+        
+        <!-- Informations générales -->
+        <div class="info-card">
+          <h3>📋 Informations Tournée</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="label">Conducteur :</span>
+              <span class="value" id="phase2Conducteur">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Véhicule :</span>
+              <span class="value" id="phase2Vehicule">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Heure départ :</span>
+              <span class="value" id="phase2HeureDepart">-</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Formulaire ajout magasin -->
+        <div class="form-card">
+          <h3>🏪 Ajouter une Livraison</h3>
+          
+          <div class="form-group">
+            <label for="nomMagasin" class="required">Nom du magasin</label>
+            <input type="text" id="nomMagasin" placeholder="Ex: LIDL Chanteloup" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="adresseMagasin">Adresse</label>
+            <input type="text" id="adresseMagasin" placeholder="Adresse complète">
+          </div>
+          
+          <div class="form-group">
+            <label for="heureLivraison" class="required">Heure de livraison</label>
+            <input type="time" id="heureLivraison" required>
+          </div>
+          
+          <div class="form-group">
+            <label>Livraison effectuée ?</label>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="livraisonEffectuee" value="Oui" checked>
+                <span class="radio-custom"></span>
+                <span class="radio-text">✅ Oui, livrée</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="livraisonEffectuee" value="Non">
+                <span class="radio-custom"></span>
+                <span class="radio-text">❌ Non livrée</span>
+              </label>
+            </div>
+          </div>
+          
+          <div class="form-group" id="motifNonLivraison" style="display: none;">
+            <label for="motifRefus">Motif de non-livraison</label>
+            <select id="motifRefus" style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-primary);">
+              <option value="">Sélectionner un motif...</option>
+              <option value="Magasin fermé">Magasin fermé</option>
+              <option value="Refus réception">Refus de réception</option>
+              <option value="Problème accès">Problème d'accès</option>
+              <option value="Autre">Autre motif</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Photo du magasin <small>(max 3)</small></label>
+            <div class="photo-upload">
+              <input type="file" id="photoMagasin" accept="image/*" capture="environment" multiple>
+              <label for="photoMagasin" class="photo-label">
+                📷 Ajouter photo(s) magasin
+              </label>
+              <div class="photo-preview" id="previewMagasin"></div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="commentaireLivraison">Commentaires</label>
+            <textarea id="commentaireLivraison" rows="3" placeholder="Observations sur la livraison..." style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-primary); resize: vertical;"></textarea>
+          </div>
+          
+          <button class="btn btn-primary" onclick="ajouterLivraison()">
+            ➕ Ajouter cette Livraison
+          </button>
+        </div>
+        
+        <!-- Liste des livraisons -->
+        <div class="livraisons-list" id="livraisonsList">
+          <h3>📋 Livraisons Effectuées</h3>
+          <div id="livraisonsContainer">
+            <p class="empty-state" style="text-align: center; color: var(--text-secondary); padding: var(--spacing-xl);">Aucune livraison enregistrée</p>
+          </div>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="main-navigation">
+          <button class="btn btn-secondary" onclick="showSection('phase1')">
+            ← Retour Contrôles
+          </button>
+          <button class="btn btn-success" onclick="terminerLivraisons()" id="btnTerminerLivraisons" style="display: none;">
+            ✅ Terminer les Livraisons
+          </button>
+        </div>
+      </div>
+      
+    </section>
+    
+    <!-- ============================================ -->
+    <!-- ✅ SECTION PHASE 3 - FIN SERVICE -->
+    <!-- ============================================ -->
+    <section id="phase3" class="section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">✅ Fin de Service</h2>
+          <div class="progress-indicator">
+            <span id="finServiceProgress">Finalisation en cours...</span>
+          </div>
+        </div>
+        
+        <!-- Récapitulatif complet -->
+        <div class="info-card">
+          <h3>📊 Récapitulatif de la Tournée</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="label">Conducteur :</span>
+              <span class="value" id="phase3Conducteur">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Date :</span>
+              <span class="value" id="phase3Date">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Heure départ :</span>
+              <span class="value" id="phase3HeureDepart">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Véhicules :</span>
+              <span class="value" id="phase3Vehicules">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Livraisons :</span>
+              <span class="value" id="phase3Livraisons">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Photos prises :</span>
+              <span class="value" id="phase3Photos">-</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Contrôles fin de service -->
+        <div class="form-card">
+          <h3>🔍 Contrôles Fin de Service</h3>
+          
+          <div class="form-group">
+            <label for="heureRetour" class="required">Heure de retour réelle</label>
+            <input type="time" id="heureRetour" required style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-primary);">
+          </div>
+          
+          <div class="form-group">
+            <label for="kilometrageFinal" class="required">Kilométrage final</label>
+            <input type="number" id="kilometrageFinal" placeholder="Ex: 246150" required style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-primary);">
+          </div>
+          
+          <div class="form-group">
+            <label>État général du véhicule</label>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="etatVehicule" value="Bon" checked>
+                <span class="radio-custom"></span>
+                <span class="radio-text">✅ Bon état</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="etatVehicule" value="Dégâts">
+                <span class="radio-custom"></span>
+                <span class="radio-text">⚠️ Nouveaux dégâts</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="etatVehicule" value="Problème">
+                <span class="radio-custom"></span>
+                <span class="radio-text">❌ Problème technique</span>
+              </label>
+            </div>
+          </div>
+          
+          <div class="form-group" id="detailsProblemes" style="display: none;">
+            <label for="descriptionProblemes">Description des problèmes</label>
+            <textarea id="descriptionProblemes" rows="3" placeholder="Détaillez les dégâts ou problèmes constatés..." style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-primary); resize: vertical;"></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label>Nettoyage effectué ?</label>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="nettoyage" value="Oui" checked>
+                <span class="radio-custom"></span>
+                <span class="radio-text">✅ Oui, effectué</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="nettoyage" value="Non">
+                <span class="radio-custom"></span>
+                <span class="radio-text">❌ Non effectué</span>
+              </label>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Photos fin de service <small>(max 3)</small></label>
+            <div class="photo-upload">
+              <input type="file" id="photoFinService" accept="image/*" capture="environment" multiple>
+              <label for="photoFinService" class="photo-label">
+                📷 Ajouter photo(s) fin de service
+              </label>
+              
+              <!-- Bouton mobile pour ajouter photos successives -->
+              <div class="mobile-photo-controls" style="margin-top: var(--spacing-sm); display: none;">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('photoFinService').click()">
+                  📷 Ajouter une photo (<span id="photoCount">0/3</span>)
+                </button>
+              </div>
+              
+              <div class="photo-preview" id="previewFinService"></div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="commentairesFinaux">Commentaires généraux</label>
+            <textarea id="commentairesFinaux" rows="4" placeholder="Observations générales sur la tournée, incidents, suggestions..." style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border-primary); border-radius: 6px; background: var(--bg-primary); resize: vertical;"></textarea>
+          </div>
+        </div>
+        
+        <!-- Validation finale -->
+        <div class="form-card" style="background: var(--accent-light); border: 2px solid var(--accent-primary);">
+          <h3 style="color: var(--accent-primary);">🎯 Validation Finale</h3>
+          
+          <div class="form-group">
+            <label class="radio-option" style="background: var(--bg-tertiary); padding: var(--spacing-md); border-radius: 8px;">
+              <input type="checkbox" id="confirmationComplete" required>
+              <span class="radio-custom"></span>
+              <span class="radio-text" style="font-weight: 600;">
+                ✅ Je confirme que tous les contrôles ont été effectués et que la tournée est terminée
+              </span>
+            </label>
+          </div>
+          
+          <button class="btn btn-success" onclick="terminerService()" style="font-size: 1.2rem; padding: var(--spacing-lg); width: 100%;">
+            🏁 Terminer le Service
+          </button>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="main-navigation">
+          <button class="btn btn-secondary" onclick="showSection('phase2')">
+            ← Retour Livraisons
+          </button>
+        </div>
+      </div>
+    </section>
+    
+    <!-- ============================================ -->
+    <!-- 🔄 SECTION REPRISE SESSION -->
+    <!-- ============================================ -->
+    <section id="resumeSession" class="section">
+      <h2 class="text-center mb-lg">🔄 Reprendre une Session</h2>
+      
+      <div style="background: white; padding: var(--spacing-lg); border-radius: var(--radius-lg); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        
+        <div class="mb-lg">
+          <label for="sessionId" style="display: block; font-weight: 500; margin-bottom: var(--spacing-sm); color: var(--text-primary);">
+            ID de Session
+          </label>
+          <input 
+            type="text" 
+            id="sessionId" 
+            placeholder="Ex: PS_1755116788394_DWAXAW"
+            style="width: 100%; padding: var(--spacing-md); border: 2px solid var(--bg-tertiary); border-radius: var(--radius-md); font-size: 1rem;"
+          >
+        </div>
+        
+        <button class="btn btn-primary mb-md" onclick="resumeSession()">
+          🔄 Reprendre Session
+        </button>
+        
+        <button class="btn btn-secondary" onclick="showSection('home')">
+          🏠 Retour Accueil
+        </button>
+        
+      </div>
+      
+    </section>
+    
+    <!-- ============================================ -->
+    <!-- 📊 SECTION HISTORIQUE -->
+    <!-- ============================================ -->
+    <section id="sessionHistory" class="section">
+      <h2 class="text-center mb-lg">📊 Historique des Sessions</h2>
+      
+      <div class="text-center">
+        <p style="color: var(--text-secondary); margin-bottom: var(--spacing-lg);">
+          Liste des sessions précédentes (à développer).
+        </p>
+        
+        <button class="btn btn-secondary" onclick="showSection('home')">
+          🏠 Retour Accueil
+        </button>
+      </div>
+      
+    </section>
+    
+  </div>
+  
+  <!-- ============================================ -->
+  <!-- 🚀 JAVASCRIPT SPA -->
+  <!-- ============================================ -->
+  <script>
+    console.log('🚀 Début chargement JavaScript...');
+    
+    // Test de syntaxe de base
+    try {
+      console.log('✅ JavaScript basic test OK');
+      
+      // Test des template literals problématiques
+      var testVar = 'test';
+      var result1 = 'Concatenation: ' + testVar;
+      console.log('✅ Concatenation test OK');
+      
+      // Test des fonctions
+      function testFunction() {
+        return 'Function test OK';
+      }
+      console.log('✅', testFunction());
+      
+    } catch(e) {
+      console.error('❌ JavaScript basic test FAIL:', e);
+      alert('ERREUR JavaScript: ' + e.message);
+    }
+    
+    // ============================================
+    // 📱 VARIABLES GLOBALES SPA
+    // ============================================
+    
+    let currentSection = 'home';
+    let sessionData = {};
+    let appState = {
+      isConnected: false,
+      conducteur: null,
+      session: null,
+      currentPhase: 0
+    };
+    
+    // ============================================
+    // 🧭 NAVIGATION SPA
+    // ============================================
+    
+    function showSection(sectionId) {
+      console.log('🧭 Navigation vers:', sectionId);
+      console.log('✅ showSection est définie et appelable');
+      
+      // 🔝 RETOUR HAUT DE PAGE
+      window.scrollTo(0, 0);
+      
+      // Masquer toutes les sections
+      document.querySelectorAll('.section').forEach(section => {
+        section.classList.remove('active');
+      });
+      
+      // Désactiver tous les nav items
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      // Afficher la section demandée
+      const targetSection = document.getElementById(sectionId);
+      if (targetSection) {
+        targetSection.classList.add('active');
+        currentSection = sectionId;
+        
+        // Activer le nav item correspondant
+        const navItem = document.getElementById('nav-' + sectionId);
+        if (navItem) {
+          navItem.classList.add('active');
+        }
+        
+        // Actions spécifiques par section
+        onSectionChange(sectionId);
+      } else {
+        console.error('❌ Section introuvable:', sectionId);
+      }
+    }
+    
+    function onSectionChange(sectionId) {
+      // Actions à exécuter lors du changement de section
+      switch(sectionId) {
+        case 'phase0':
+          initPhase0();
+          break;
+        case 'phase1':
+          initPhase1();
+          break;
+        case 'phase2':
+          initPhase2();
+          break;
+        case 'phase3':
+          initPhase3();
+          break;
+        case 'resumeSession':
+          loadRecentSessions();
+          break;
+        case 'sessionHistory':
+          loadSessionHistory();
+          break;
+      }
+    }
+    
+    // ============================================
+    // 🚀 ACTIONS PRINCIPALES
+    // ============================================
+    
+    function startNewTour() {
+      console.log('🚀 Démarrage nouvelle tournée');
+      console.log('✅ startNewTour est définie et appelable');
+      
+      // Réinitialiser les données
+      sessionData = {};
+      appState = {
+        isConnected: false,
+        conducteur: null,
+        session: null,
+        currentPhase: 0
+      };
+      
+      // Nettoyer localStorage
+      localStorage.removeItem('currentSessionId');
+      localStorage.removeItem('phase0_data');
+      localStorage.removeItem('phase1_data');
+      localStorage.removeItem('phase2_data');
+      localStorage.removeItem('phase3_data');
+      
+      // Aller à la connexion
+      showSection('phase0');
+    }
+    
+    function resumeSession() {
+      const sessionId = document.getElementById('sessionId').value.trim();
+      
+      if (!sessionId) {
+        alert('⚠️ Veuillez saisir un ID de session');
+        return;
+      }
+      
+      console.log('🔄 Reprise session:', sessionId);
+      
+      // Rechercher la session (à implémenter)
+      // Pour l'instant, simulation
+      alert('🔄 Fonction de reprise en développement...');
+    }
+    
+    // ============================================
+    // 👤 PHASE 0 - CONNEXION CONDUCTEUR
+    // ============================================
+    
+    function initPhase0() {
+      console.log('👤 Initialisation Phase 0');
+      
+      // Focus automatique sur le champ code
+      setTimeout(() => {
+        const codeInput = document.getElementById('conducteurCode');
+        if (codeInput) {
+          codeInput.focus();
+        }
+      }, 300);
+    }
+    
+    function connectConducteur() {
+      const code = document.getElementById('conducteurCode').value.trim();
+      
+      if (!code || code.length !== 4) {
+        alert('⚠️ Veuillez saisir un code conducteur valide (4 chiffres)');
+        return;
+      }
+      
+      console.log('🔐 Connexion conducteur:', code);
+      
+      // Désactiver le bouton pendant la requête
+      const btn = event.target;
+      btn.disabled = true;
+      btn.textContent = '🔄 Connexion...';
+      
+      // Appel backend avec la fonction existante
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run
+          .withSuccessHandler(onConducteurConnected)
+          .withFailureHandler(onConducteurError)
+          .getConducteurInfo(code);
+      } else {
+        // Mode développement - simulation avec données réalistes
+        setTimeout(() => {
+          if (code === '1001') {
+            onConducteurConnected({
+              conducteur: {
+                id: '1001',
+                nom: 'conducteur_exemple1',
+                prenom: 'Jean',
+                email: 'jean.exemple1@transport.com',
+                telephone: 601020304,
+                site: 'LIDL-Chanteloup',
+                statut: 'Actif'
+              },
+              vehicules: [
+                { immatriculation: 'CL-532-ZD', type: 'Tracteur' },
+                { immatriculation: 'FG-193-WS', type: 'Remorque' }
+              ]
+            });
+          } else if (code === '1002') {
+            onConducteurConnected({
+              conducteur: {
+                id: '1002',
+                nom: 'conducteur_exemple2',
+                prenom: 'Marie',
+                site: 'ITM-Louviers'
+              },
+              vehicules: []
+            });
+          } else {
+            onConducteurError({ message: 'Code conducteur non trouvé' });
+          }
+        }, 1000);
+      }
+    }
+    
+    function onConducteurConnected(result) {
+      console.log('✅ Conducteur connecté:', result);
+      
+      // Réactiver le bouton
+      const btn = document.querySelector('#phase0 .btn-primary');
+      btn.disabled = false;
+      btn.textContent = '🔐 Se Connecter';
+      
+      if (result.error) {
+        onConducteurError(result);
+        return;
+      }
+      
+      // Sauvegarder les données
+      appState.isConnected = true;
+      appState.conducteur = result.conducteur;
+      sessionData.conducteur = result.conducteur;
+      sessionData.vehicules = result.vehicules; // Liste complète des véhicules disponibles
+      sessionData.tournee = {}; // Sera rempli lors de la sélection
+      sessionData.selected = {}; // Sera rempli lors de la sélection
+      
+      // Afficher le résultat
+      showConducteurResult(result);
+      
+      // Générer session ID
+      const sessionId = generateSessionId();
+      appState.session = sessionId;
+      sessionData.sessionId = sessionId; // ⭐ AJOUT CRITIQUE!
+      localStorage.setItem('currentSessionId', sessionId);
+      
+      // Plus de pop-up automatique - l'utilisateur doit sélectionner les véhicules d'abord
+      console.log('✅ Connexion réussie - affichage sélection véhicules');
+    }
+    
+    function onConducteurError(error) {
+      console.error('❌ Erreur connexion:', error);
+      
+      // Réactiver le bouton
+      const btn = document.querySelector('#phase0 .btn-primary');
+      btn.disabled = false;
+      btn.textContent = '🔐 Se Connecter';
+      
+      // Afficher l'erreur
+      let message = 'Erreur de connexion conducteur';
+      if (error.message) {
+        message = error.message;
+      }
+      
+      alert('❌ ' + message);
+    }
+    
+    function showConducteurResult(result) {
+      const resultDiv = document.getElementById('conducteurResult');
+      resultDiv.innerHTML = 
+        '<div style="background: var(--secondary-color); color: white; padding: var(--spacing-md); border-radius: var(--radius-md); text-align: center;">' +
+          '<h4 style="margin-bottom: var(--spacing-sm);">✅ Connexion Réussie</h4>' +
+          '<p><strong>' + result.conducteur.prenom + ' ' + result.conducteur.nom + '</strong></p>' +
+          '<p>' + result.conducteur.site + '</p>' +
+          '<small>' + result.vehicules.length + ' véhicule(s) disponible(s)</small>' +
+        '</div>';
+      resultDiv.classList.remove('hidden');
+      
+      // Remplir les listes de véhicules et afficher la sélection
+      populateVehicleLists(result.vehicules);
+      showVehicleSelection();
+      
+      // Initialiser la date et heure
+      initializeTourneeDateTime();
+    }
+    
+    function populateVehicleLists(vehicules) {
+      console.log('🚛 Remplissage listes véhicules Phase 0');
+      
+      // Tracteurs
+      const tracteurSelect = document.getElementById('selectTracteur');
+      if (tracteurSelect && vehicules) {
+        tracteurSelect.innerHTML = '<option value="">Sélectionner un tracteur...</option>';
+        vehicules.filter(v => v.type === 'Tracteur').forEach(tracteur => {
+          const option = document.createElement('option');
+          option.value = tracteur.immatriculation;
+          option.textContent = tracteur.immatriculation + ' - ' + tracteur.statut + ' (' + (tracteur.kilometrage || 0) + ' km)';
+          tracteurSelect.appendChild(option);
+        });
+      }
+      
+      // Remorques
+      const remorqueSelect = document.getElementById('selectRemorque');
+      if (remorqueSelect && vehicules) {
+        remorqueSelect.innerHTML = '<option value="">Sélectionner une remorque...</option>';
+        vehicules.filter(v => v.type === 'Remorque' || v.type === 'Porteur').forEach(remorque => {
+          const option = document.createElement('option');
+          option.value = remorque.immatriculation;
+          option.textContent = remorque.immatriculation + ' - ' + remorque.type + ' - ' + remorque.statut;
+          remorqueSelect.appendChild(option);
+        });
+      }
+    }
+    
+    function showVehicleSelection() {
+      const vehicleDiv = document.getElementById('vehicleSelection');
+      if (vehicleDiv) {
+        vehicleDiv.classList.remove('hidden');
+        
+        // Scroll vers la sélection
+        setTimeout(() => {
+          vehicleDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+      }
+    }
+    
+    function initializeTourneeDateTime() {
+      // Date du jour
+      const today = new Date();
+      const dateInput = document.getElementById('dateTournee');
+      if (dateInput) {
+        dateInput.value = today.toISOString().split('T')[0];
+      }
+      
+      // Heure actuelle arrondie à la demi-heure supérieure
+      const now = new Date();
+      const minutes = now.getMinutes();
+      const roundedMinutes = minutes <= 30 ? 30 : 60;
+      if (roundedMinutes === 60) {
+        now.setHours(now.getHours() + 1);
+        now.setMinutes(0);
+      } else {
+        now.setMinutes(30);
+      }
+      
+      const timeInput = document.getElementById('heureTournee');
+      if (timeInput) {
+        timeInput.value = now.toTimeString().slice(0, 5);
+      }
+    }
+    
+    function validateVehicleSelection() {
+      console.log('✅ Validation sélection véhicules');
+      
+      // Validation des champs obligatoires
+      const dateTournee = document.getElementById('dateTournee').value;
+      const heureTournee = document.getElementById('heureTournee').value;
+      const tracteur = document.getElementById('selectTracteur').value;
+      const remorque = document.getElementById('selectRemorque').value;
+      
+      if (!dateTournee) {
+        alert('⚠️ Veuillez sélectionner la date de la tournée');
+        return;
+      }
+      
+      if (!heureTournee) {
+        alert('⚠️ Veuillez saisir l\'heure de départ');
+        return;
+      }
+      
+      if (!tracteur) {
+        alert('⚠️ Veuillez sélectionner un tracteur');
+        return;
+      }
+      
+      if (!remorque) {
+        alert('⚠️ Veuillez sélectionner une remorque');
+        return;
+      }
+      
+      // Récupérer les données complètes
+      const typeTournee = document.querySelector('input[name="typeTournee"]:checked').value;
+      const typeLivraison = document.querySelector('input[name="typeLivraison"]:checked').value;
+      const commentaires = document.getElementById('commentairesVehicules').value.trim();
+      
+      // Compléter les données de session
+      if (!sessionData.tournee) sessionData.tournee = {};
+      sessionData.tournee = {
+        date: dateTournee,
+        heure: heureTournee,
+        type: typeTournee,
+        livraison: typeLivraison
+      };
+      
+      // Conserver la liste des véhicules et ajouter la sélection
+      if (!sessionData.vehicules) sessionData.vehicules = [];
+      sessionData.vehiculesSelected = {
+        tracteur: tracteur,
+        remorque: remorque,
+        commentaires: commentaires
+      };
+      
+      // Sauvegarder localement
+      console.log('💾 sessionData avant sauvegarde:', sessionData);
+      localStorage.setItem('sessionData', JSON.stringify(sessionData));
+      
+      // Sauvegarder sur Google Sheets (Phase 0)
+      savePhase0ToBackend(sessionData);
+      
+      // Notification et navigation
+      const message = '✅ Configuration terminée !\n\n' +
+        '📋 Récapitulatif :\n' +
+        '• Conducteur : ' + sessionData.conducteur.prenom + ' ' + sessionData.conducteur.nom + '\n' +
+        '• Date : ' + dateTournee + '\n' +
+        '• Heure : ' + heureTournee + '\n' +
+        '• Tracteur : ' + tracteur + '\n' +
+        '• Remorque : ' + remorque + '\n\n' +
+        '🚛 Continuer vers les contrôles ?';
+      
+      if (confirm(message)) {
+        console.log('🚛 Navigation vers Phase 1...');
+        showSection('phase1');
+      }
+    }
+    
+    // ============================================
+    // ☁️ FONCTIONS SAUVEGARDE BACKEND
+    // ============================================
+    
+    function savePhase0ToBackend(data) {
+      console.log('☁️ Sauvegarde Phase 0 vers backend');
+      
+      const phase0Data = {
+        sessionId: data.sessionId,
+        conducteur: data.conducteur,
+        tournee: data.tournee,
+        vehiculesSelected: data.vehiculesSelected,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Vérifier si Google Apps Script est disponible
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        // Appel backend Google Apps Script
+        google.script.run
+          .withSuccessHandler(onPhase0SaveSuccess)
+          .withFailureHandler(onPhase0SaveError)
+          .savePhase0Data(phase0Data);
+      } else {
+        console.log('🔧 Mode développement - simulation sauvegarde Phase 0');
+        // Simuler la sauvegarde en mode dev
+        setTimeout(() => {
+          onPhase0SaveSuccess({ success: true, message: 'Sauvegarde simulée (mode dev)' });
+        }, 500);
+      }
+    }
+    
+    function onPhase0SaveSuccess(result) {
+      console.log('✅ Phase 0 sauvegardée:', result);
+      // Marquer comme synchronisé
+      localStorage.setItem('phase0_synced', 'true');
+      updateSyncStatus();
+    }
+    
+    function onPhase0SaveError(error) {
+      console.error('❌ Erreur sauvegarde Phase 0:', error);
+      // Marquer pour synchronisation ultérieure
+      localStorage.setItem('phase0_pending_sync', 'true');
+      updateSyncStatus();
+    }
+    
+    function updateSyncStatus() {
+      const phase0Synced = localStorage.getItem('phase0_synced') === 'true';
+      const phase1Synced = localStorage.getItem('phase1_synced') === 'true';
+      const phase2Synced = localStorage.getItem('phase2_synced') === 'true';
+      const phase3Synced = localStorage.getItem('phase3_synced') === 'true';
+      
+      const phase0Pending = localStorage.getItem('phase0_pending_sync') === 'true';
+      const phase1Pending = localStorage.getItem('phase1_pending_sync') === 'true';
+      const phase2Pending = localStorage.getItem('phase2_pending_sync') === 'true';
+      const phase3Pending = localStorage.getItem('phase3_pending_sync') === 'true';
+      
+      // Vérifier les photos
+      const phase1PhotosUploaded = localStorage.getItem('phase1_photos_uploaded') === 'true';
+      const phase2PhotosUploaded = localStorage.getItem('phase2_photos_uploaded') === 'true';
+      const phase3PhotosUploaded = localStorage.getItem('phase3_photos_uploaded') === 'true';
+      
+      const phase1PhotosPending = localStorage.getItem('phase1_photos_pending') === 'true';
+      const phase2PhotosPending = localStorage.getItem('phase2_photos_pending') === 'true';
+      const phase3PhotosPending = localStorage.getItem('phase3_photos_pending') === 'true';
+      
+      const statusElement = document.getElementById('syncStatus');
+      if (!statusElement) return;
+      
+      const retryButton = document.getElementById('retrySync');
+      
+      if (phase0Pending || phase1Pending || phase2Pending || phase3Pending || 
+          phase1PhotosPending || phase2PhotosPending || phase3PhotosPending) {
+        statusElement.textContent = '⏳ Sync en attente';
+        statusElement.className = 'status-text pending';
+        if (retryButton) retryButton.style.display = 'inline-block';
+      } else if (phase0Synced || phase1Synced || phase2Synced || phase3Synced ||
+                 phase1PhotosUploaded || phase2PhotosUploaded || phase3PhotosUploaded) {
+        statusElement.textContent = '✅ Synchronisé';
+        statusElement.className = 'status-text synced';
+        if (retryButton) retryButton.style.display = 'none';
+      } else {
+        statusElement.textContent = '📱 Local';
+        statusElement.className = 'status-text local';
+        if (retryButton) retryButton.style.display = 'none';
+      }
+    }
+    
+    function savePhase1ToBackend(data) {
+      console.log('☁️ Sauvegarde Phase 1 vers backend');
+      console.log('🔍 sessionData.tournee:', sessionData.tournee);
+      console.log('🔍 sessionData complet:', sessionData);
+      
+      const phase1Data = {
+        sessionId: sessionData.sessionId,
+        formData: {
+          // Données de tournée de Phase 0
+          tour: sessionData.tournee?.type || 'Non défini',
+          siteDepart: sessionData.conducteur?.site || 'Non défini',
+          // Données de contrôles Phase 1
+          ...data
+        },
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log('📤 Données envoyées au backend:', phase1Data);
+      
+      // Vérifier si Google Apps Script est disponible
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(onPhase1SaveSuccess)
+          .withFailureHandler(onPhase1SaveError)
+          .savePhase1Data(phase1Data);
+      } else {
+        console.log('🔧 Mode développement - simulation sauvegarde Phase 1');
+        setTimeout(() => {
+          onPhase1SaveSuccess({ success: true, message: 'Sauvegarde simulée (mode dev)' });
+        }, 500);
+      }
+    }
+    
+    function onPhase1SaveSuccess(result) {
+      console.log('✅ Phase 1 sauvegardée:', result);
+      localStorage.setItem('phase1_synced', 'true');
+      updateSyncStatus();
+    }
+    
+    function onPhase1SaveError(error) {
+      console.error('❌ Erreur sauvegarde Phase 1:', error);
+      localStorage.setItem('phase1_pending_sync', 'true');
+      updateSyncStatus();
+    }
+    
+    function savePhase2ToBackend(data) {
+      console.log('☁️ Sauvegarde Phase 2 vers backend');
+      
+      // 🎯 ENVOI INDIVIDUAL MAGASIN AVEC DONNÉES COMPLÈTES
+      if (data.livraisons && data.livraisons.length > 0) {
+        // Envoyer chaque magasin individuellement
+        data.livraisons.forEach((magasin, index) => {
+          const magasinData = {
+            sessionId: sessionData.sessionId,
+            generalData: {
+              dateDepart: sessionData.tournee?.date || new Date().toLocaleDateString('fr-FR'),
+              cycle: sessionData.tournee?.type || '',
+              typeLivraison: sessionData.tournee?.livraison || '',
+              siteChargement: sessionData.conducteur?.site || '',
+              nomConducteur: `${sessionData.conducteur?.prenom || ''} ${sessionData.conducteur?.nom || ''}`.trim(),
+              heureDepartPrevue: sessionData.tournee?.heure || '',
+              magasinsALivrer: data.livraisons.length.toString()
+            },
+            magasin: {
+              ...magasin,
+              index: index
+            }
+          };
+          
+          console.log('📤 Envoi magasin ' + (index + 1) + ':', magasinData);
+          
+          google.script.run
+            .withSuccessHandler(onPhase2SaveSuccess)
+            .withFailureHandler(onPhase2SaveError)
+            .saveSingleMagasin(magasinData);
+        });
+        return;
+      }
+      
+      const phase2Data = {
+        sessionId: sessionData.sessionId,
+        // Données de Phase 2 avec livraisons
+        magasins: data.livraisons || [],
+        livraisons: data.livraisons || [],
+        dateDepart: sessionData.tournee?.date || new Date().toLocaleDateString('fr-FR'),
+        heureDepart: sessionData.tournee?.heure || new Date().toTimeString().slice(0,5),
+        ...data,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Vérifier si Google Apps Script est disponible
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(onPhase2SaveSuccess)
+          .withFailureHandler(onPhase2SaveError)
+          .savePhase2Data(phase2Data);
+      } else {
+        console.log('🔧 Mode développement - simulation sauvegarde Phase 2');
+        setTimeout(() => {
+          onPhase2SaveSuccess({ success: true, message: 'Sauvegarde simulée (mode dev)' });
+        }, 500);
+      }
+    }
+    
+    function onPhase2SaveSuccess(result) {
+      console.log('✅ Phase 2 sauvegardée:', result);
+      localStorage.setItem('phase2_synced', 'true');
+      updateSyncStatus();
+    }
+    
+    function onPhase2SaveError(error) {
+      console.error('❌ Erreur sauvegarde Phase 2:', error);
+      localStorage.setItem('phase2_pending_sync', 'true');
+      updateSyncStatus();
+    }
+    
+    function savePhase3ToBackend(data) {
+      console.log('☁️ Sauvegarde Phase 3 vers backend');
+      
+      const phase3Data = {
+        sessionId: sessionData.sessionId,
+        // Données de tournée de Phase 0 pour Phase 3
+        siteAffectation: sessionData.conducteur?.site || 'Non défini',
+        tourContratFin: sessionData.tournee?.type || 'Non défini', 
+        heureRetour: data.heureRetour || new Date().toTimeString().slice(0,5),
+        ...data,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Vérifier si Google Apps Script est disponible
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(onPhase3SaveSuccess)
+          .withFailureHandler(onPhase3SaveError)
+          .savePhase3Data(phase3Data);
+      } else {
+        console.log('🔧 Mode développement - simulation sauvegarde Phase 3');
+        setTimeout(() => {
+          onPhase3SaveSuccess({ success: true, message: 'Sauvegarde simulée (mode dev)' });
+        }, 500);
+      }
+    }
+    
+    function onPhase3SaveSuccess(result) {
+      console.log('✅ Phase 3 sauvegardée:', result);
+      localStorage.setItem('phase3_synced', 'true');
+      localStorage.setItem('session_fully_synced', 'true');
+      updateSyncStatus();
+    }
+    
+    function onPhase3SaveError(error) {
+      console.error('❌ Erreur sauvegarde Phase 3:', error);
+      localStorage.setItem('phase3_pending_sync', 'true');
+      updateSyncStatus();
+    }
+    
+    // ============================================
+    // 📷 FONCTIONS UPLOAD PHOTOS GOOGLE DRIVE
+    // ============================================
+    
+    function uploadPhotosToGoogleDrive(photos, sessionId, phase) {
+      console.log('📷 Upload ' + Object.keys(photos).length + ' photos Phase ' + phase + ' vers Google Drive');
+      
+      if (!photos || Object.keys(photos).length === 0) {
+        console.log('📷 Aucune photo à uploader');
+        return Promise.resolve([]);
+      }
+      
+      const photoPromises = [];
+      
+      Object.entries(photos).forEach(([photoId, photoData]) => {
+        const uploadData = {
+          sessionId: sessionId,
+          phase: phase,
+          photoId: photoId,
+          photoData: photoData.data || photoData, // Base64
+          fileName: photoData.name || photoData.fileName || (photoId + '.jpg'),
+          fileSize: photoData.size || photoData.fileSize || 0,
+          timestamp: photoData.timestamp || new Date().toISOString()
+        };
+        
+        console.log('📷 Upload data pour ' + photoId + ':', {
+          sessionId: uploadData.sessionId,
+          fileName: uploadData.fileName,
+          fileSize: uploadData.fileSize,
+          dataLength: uploadData.photoData ? uploadData.photoData.length : 0
+        });
+        
+        const promise = new Promise((resolve, reject) => {
+          // Vérifier si Google Apps Script est disponible
+          if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run
+              .withSuccessHandler((result) => {
+                console.log('✅ Photo ' + photoId + ' uploadée:', result);
+                resolve(result);
+              })
+              .withFailureHandler((error) => {
+                console.error('❌ Erreur upload photo ' + photoId + ':', error);
+                reject(error);
+              })
+              .savePhotosToDrive(
+                { [photoId]: { 
+                  data: uploadData.photoData.split(',')[1], // Retirer le préfixe data:image/...;base64,
+                  name: uploadData.fileName,
+                  type: photoData.type || 'image/jpeg',
+                  size: uploadData.fileSize
+                } }, 
+                uploadData.sessionId, 
+                uploadData.phase
+              );
+          } else {
+            console.log('🔧 Mode développement - simulation upload photo ' + photoId);
+            // Simuler l'upload en mode dev
+            setTimeout(() => {
+              resolve({ 
+                success: true, 
+                photoId: photoId,
+                url: 'https://drive.google.com/simulated/' + photoId,
+                message: 'Upload simulé (mode dev)'
+              });
+            }, 100);
+          }
+        });
+        
+        photoPromises.push(promise);
+      });
+      
+      return Promise.allSettled(photoPromises);
+    }
+    
+    function uploadPhase1Photos() {
+      const phase1Data = JSON.parse(localStorage.getItem('phase1_data') || '{}');
+      const sessionId = sessionData.sessionId;
+      
+      if (phase1Data.photos) {
+        uploadPhotosToGoogleDrive(phase1Data.photos, sessionId, 1)
+          .then(results => {
+            console.log('📷 Upload Phase 1 terminé:', results);
+            const successful = results.filter(r => r.status === 'fulfilled').length;
+            const failed = results.filter(r => r.status === 'rejected').length;
+            
+            if (successful > 0) {
+              localStorage.setItem('phase1_photos_uploaded', 'true');
+              console.log('✅ ' + successful + ' photos Phase 1 uploadées avec succès');
+              
+              // 🎯 NOUVELLE MAGIE : Récupérer les URLs et sauvegarder dans Sheets
+              const photoUrls = {};
+              results.forEach(result => {
+                if (result.status === 'fulfilled' && result.value) {
+                  // Les URLs sont dans result.value avec les clés photoCarburant, etc.
+                  Object.assign(photoUrls, result.value);
+                }
+              });
+              
+              console.log('🔗 URLs récupérées pour Sheets:', photoUrls);
+              
+              // Sauvegarder dans Sheets avec les URLs
+              const dataForSheets = {
+                ...phase1Data,
+                sessionId: sessionId,
+                formData: phase1Data
+              };
+              
+              console.log('📤 Données envoyées pour Sheets:', dataForSheets);
+              console.log('💬 Commentaires envoyés:', {
+                commentairesTracteur: dataForSheets.commentairesTracteur,
+                commentairesRemorque: dataForSheets.commentairesRemorque,
+                commentairesFinaux: dataForSheets.commentairesFinaux
+              });
+              
+              google.script.run
+                .withSuccessHandler((sheetResult) => {
+                  console.log('📊 ✅ SAUVEGARDE SHEETS FINALE RÉUSSIE:', sheetResult);
+                })
+                .withFailureHandler((sheetError) => {
+                  console.error('📊 ❌ Erreur sauvegarde Sheets finale:', sheetError);
+                })
+                .savePhase1ToSheetsWithUrls(dataForSheets, photoUrls);
+            }
+            
+            if (failed > 0) {
+              console.error('❌ ' + failed + ' photos Phase 1 ont échoué');
+              localStorage.setItem('phase1_photos_pending', 'true');
+            }
+          })
+          .catch(error => {
+            console.error('❌ Erreur globale upload Phase 1:', error);
+            localStorage.setItem('phase1_photos_pending', 'true');
+          });
+      }
+    }
+    
+    function uploadPhase2Photos() {
+      const phase2Data = JSON.parse(localStorage.getItem('phase2_data') || '{}');
+      const sessionId = sessionData.sessionId;
+      
+      if (phase2Data.photos) {
+        uploadPhotosToGoogleDrive(phase2Data.photos, sessionId, 2)
+          .then(results => {
+            console.log('📷 Upload Phase 2 terminé:', results);
+            const successful = results.filter(r => r.status === 'fulfilled').length;
+            const failed = results.filter(r => r.status === 'rejected').length;
+            
+            if (successful > 0) {
+              localStorage.setItem('phase2_photos_uploaded', 'true');
+              console.log('✅ ' + successful + ' photos Phase 2 uploadées avec succès');
+            }
+            
+            if (failed > 0) {
+              console.error('❌ ' + failed + ' photos Phase 2 ont échoué');
+              localStorage.setItem('phase2_photos_pending', 'true');
+            }
+          })
+          .catch(error => {
+            console.error('❌ Erreur globale upload Phase 2:', error);
+            localStorage.setItem('phase2_photos_pending', 'true');
+          });
+      }
+    }
+    
+    function uploadPhase3Photos() {
+      const sessionId = sessionData.sessionId;
+      
+      if (phase3Data.photos) {
+        uploadPhotosToGoogleDrive(phase3Data.photos, sessionId, 3)
+          .then(results => {
+            console.log('📷 Upload Phase 3 terminé:', results);
+            const successful = results.filter(r => r.status === 'fulfilled').length;
+            const failed = results.filter(r => r.status === 'rejected').length;
+            
+            if (successful > 0) {
+              localStorage.setItem('phase3_photos_uploaded', 'true');
+              console.log('✅ ' + successful + ' photos Phase 3 uploadées avec succès');
+            }
+            
+            if (failed > 0) {
+              console.error('❌ ' + failed + ' photos Phase 3 ont échoué');
+              localStorage.setItem('phase3_photos_pending', 'true');
+            }
+          })
+          .catch(error => {
+            console.error('❌ Erreur globale upload Phase 3:', error);
+            localStorage.setItem('phase3_photos_pending', 'true');
+          });
+      }
+    }
+    
+    function uploadAllPendingPhotos() {
+      console.log('📷 Upload de toutes les photos en attente');
+      
+      const phase1Pending = localStorage.getItem('phase1_photos_pending') === 'true';
+      const phase2Pending = localStorage.getItem('phase2_photos_pending') === 'true';
+      const phase3Pending = localStorage.getItem('phase3_photos_pending') === 'true';
+      
+      if (phase1Pending) {
+        uploadPhase1Photos();
+        localStorage.removeItem('phase1_photos_pending');
+      }
+      
+      if (phase2Pending) {
+        uploadPhase2Photos();
+        localStorage.removeItem('phase2_photos_pending');
+      }
+      
+      if (phase3Pending) {
+        uploadPhase3Photos();
+        localStorage.removeItem('phase3_photos_pending');
+      }
+      
+      if (!phase1Pending && !phase2Pending && !phase3Pending) {
+        console.log('📷 Aucune photo en attente d\'upload');
+      }
+    }
+    
+    // ============================================
+    // 🚛 PHASES 1-2-3 (À DÉVELOPPER)
+    // ============================================
+    
+    function initPhase1() {
+      console.log('🚛 Initialisation Phase 1');
+      
+      if (!appState.isConnected) {
+        alert('⚠️ Veuillez d\'abord vous connecter');
+        showSection('phase0');
+        return;
+      }
+      
+      // Charger les données Phase 0 dans le récapitulatif
+      loadPhase1Data();
+      
+      // Initialiser la première étape
+      currentPhase1Step = 1;
+      showPhase1Step(1);
+      updatePhase1Progress();
+    }
+    
+    function populatePhase1VehicleSelects() {
+      console.log('🚛 Remplissage véhicules Phase 1 (inputs readonly)');
+      
+      // Les véhicules sont maintenant en readonly et pré-remplis
+      // Cette fonction est conservée pour compatibilité mais ne fait plus rien
+      // car les inputs sont pré-remplis directement dans loadPhase1Data()
+    }
+    
+    // ============================================
+    // 🚛 PHASE 1 - GESTION DES ÉTAPES
+    // ============================================
+    
+    let currentPhase1Step = 1;
+    const totalPhase1Steps = 6;
+    let phase1Data = {};
+    
+    function loadPhase1Data() {
+      console.log('📊 Chargement données Phase 1');
+      
+      // Charger sessionData depuis localStorage si vide
+      if (!sessionData.sessionId) {
+        const storedSessionData = localStorage.getItem('sessionData');
+        if (storedSessionData) {
+          sessionData = JSON.parse(storedSessionData);
+          console.log('🔄 sessionData rechargé depuis localStorage:', sessionData);
+        }
+      }
+      
+      if (appState.conducteur && sessionData.conducteur) {
+        document.getElementById('recapConducteur').textContent = sessionData.conducteur.prenom + ' ' + sessionData.conducteur.nom;
+        document.getElementById('recapSite').textContent = sessionData.conducteur.site;
+      }
+      
+      // Simuler données de tournée (Phase 0 pourrait les fournir)
+      document.getElementById('recapDate').textContent = new Date().toLocaleDateString('fr-FR');
+      document.getElementById('recapHeure').textContent = new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
+      document.getElementById('recapTour').textContent = '1er Tour';
+      
+      // Populer les selects avec les véhicules disponibles et pré-remplir
+      populatePhase1VehicleSelects();
+      
+      // Pré-remplir avec les véhicules sélectionnés en Phase 0
+      if (sessionData.vehiculesSelected) {
+        const tracteurInput = document.getElementById('immatTracteur');
+        const remorqueInput = document.getElementById('immatRemorque');
+        
+        if (tracteurInput && sessionData.vehiculesSelected.tracteur) {
+          tracteurInput.value = sessionData.vehiculesSelected.tracteur;
+          console.log('🚛 Tracteur pré-rempli:', sessionData.vehiculesSelected.tracteur);
+        }
+        
+        if (remorqueInput && sessionData.vehiculesSelected.remorque) {
+          remorqueInput.value = sessionData.vehiculesSelected.remorque;
+          console.log('🚛 Remorque pré-remplie:', sessionData.vehiculesSelected.remorque);
+        }
+      }
+      document.getElementById('recapType').textContent = 'Frais';
+      
+      // Véhicules depuis sessionData si disponibles
+      if (sessionData.vehicules && sessionData.vehicules.length > 0) {
+        const tracteur = sessionData.vehicules.find(v => v.type === 'Tracteur');
+        const remorque = sessionData.vehicules.find(v => v.type === 'Remorque');
+        
+        document.getElementById('recapTracteur').textContent = tracteur ? tracteur.immatriculation : 'Non sélectionné';
+        document.getElementById('recapRemorque').textContent = remorque ? remorque.immatriculation : 'Non sélectionné';
+        
+        // Pré-remplir les champs
+        if (tracteur) {
+          document.getElementById('immatTracteur').value = tracteur.immatriculation;
+        }
+      }
+    }
+    
+    function showPhase1Step(stepNumber) {
+      console.log('🚛 Affichage étape ' + stepNumber + '/' + totalPhase1Steps);
+      
+      // 🔝 RETOUR HAUT DE PAGE POUR LES ÉTAPES
+      window.scrollTo(0, 0);
+      
+      // Masquer toutes les étapes
+      document.querySelectorAll('.step-container').forEach(step => {
+        step.classList.remove('active');
+      });
+      
+      // Afficher l'étape demandée
+      const stepElement = document.getElementById('step' + stepNumber);
+      if (stepElement) {
+        stepElement.classList.add('active');
+        currentPhase1Step = stepNumber;
+        updatePhase1Progress();
+        
+        // 📊 Mettre à jour le récapitulatif si c'est l'étape finale
+        if (stepNumber === 6) {
+          setTimeout(updateFinalRecap, 100); // Petit délai pour que DOM soit prêt
+        }
+      }
+    }
+    
+    function updatePhase1Progress() {
+      const progressPercent = (currentPhase1Step / totalPhase1Steps) * 100;
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      
+      if (progressFill) {
+        progressFill.style.width = progressPercent + '%';
+      }
+      
+      if (progressText) {
+        progressText.textContent = 'Étape ' + currentPhase1Step + ' sur ' + totalPhase1Steps;
+      }
+    }
+    
+    function nextPhase1Step() {
+      if (validatePhase1Step(currentPhase1Step)) {
+        savePhase1StepData(currentPhase1Step);
+        
+        if (currentPhase1Step < totalPhase1Steps) {
+          showPhase1Step(currentPhase1Step + 1);
+        } else {
+          // Phase 1 terminée
+          completePhase1();
+        }
+      }
+    }
+    
+    function prevPhase1Step() {
+      if (currentPhase1Step > 1) {
+        showPhase1Step(currentPhase1Step - 1);
+      }
+    }
+    
+    function validatePhase1Step(stepNumber) {
+      // Validation basique - à compléter selon les besoins
+      switch(stepNumber) {
+        case 1:
+          const numeroContrat = document.getElementById('numeroContrat').value.trim();
+          if (!numeroContrat) {
+            alert('⚠️ Veuillez saisir le numéro de contrat ou tour');
+            return false;
+          }
+          break;
+        case 2:
+          const kilometrage = document.getElementById('kilometrage').value.trim();
+          if (!kilometrage) {
+            alert('⚠️ Veuillez saisir le kilométrage');
+            return false;
+          }
+          break;
+        case 4:
+          // Vérifier photo hayon obligatoire
+          if (!phase1Data.photos || !phase1Data.photos['photoHayon']) {
+            alert('⚠️ La photo du hayon déployé est obligatoire');
+            return false;
+          }
+          break;
+        case 6:
+          const heureDepart = document.getElementById('heureDepart').value.trim();
+          if (!heureDepart) {
+            alert('⚠️ Veuillez saisir l\'heure de départ réelle');
+            return false;
+          }
+          break;
+      }
+      return true;
+    }
+    
+    function savePhase1StepData(stepNumber) {
+      console.log('💾 Sauvegarde données étape ' + stepNumber);
+      
+      switch(stepNumber) {
+        case 1:
+          phase1Data.numeroContrat = document.getElementById('numeroContrat').value.trim();
+          break;
+        case 2:
+          phase1Data.immatTracteur = document.getElementById('immatTracteur').value;
+          phase1Data.degatsTracteur = document.querySelector('input[name="degatsTracteur"]:checked')?.value;
+          phase1Data.kilometrage = document.getElementById('kilometrage').value;
+          break;
+        case 3:
+          phase1Data.commentairesTracteur = document.getElementById('commentairesTracteur').value.trim();
+          break;
+        case 4:
+          phase1Data.immatRemorque = document.getElementById('immatRemorque').value;
+          phase1Data.degatsRemorque = document.querySelector('input[name="degatsRemorque"]:checked')?.value;
+          phase1Data.commentairesRemorque = document.getElementById('commentairesRemorque').value.trim();
+          break;
+        case 5:
+          phase1Data.chargementConforme = document.querySelector('input[name="chargementConforme"]:checked')?.value;
+          phase1Data.commentairesChargement = document.getElementById('commentairesChargement').value.trim();
+          break;
+        case 6:
+          phase1Data.heureDepart = document.getElementById('heureDepart').value;
+          phase1Data.commentairesFinaux = document.getElementById('commentairesFinaux').value.trim();
+          updateFinalRecap();
+          break;
+      }
+      
+      // Sauvegarder localement
+      try {
+        localStorage.setItem('phase1_data', JSON.stringify(phase1Data));
+      } catch (e) {
+        console.warn('⚠️ localStorage plein - sauvegarde étape sans photos volumineuses');
+        // Retirer les data photos volumineuses
+        const cleanData = {...phase1Data};
+        if (cleanData.photos) {
+          Object.keys(cleanData.photos).forEach(photoId => {
+            if (cleanData.photos[photoId].data) {
+              delete cleanData.photos[photoId].data;
+              cleanData.photos[photoId].storedOnServer = true;
+            }
+          });
+        }
+        try {
+          localStorage.setItem('phase1_data', JSON.stringify(cleanData));
+        } catch (e2) {
+          console.error('❌ Impossible de sauvegarder phase1_data');
+        }
+      }
+      
+      // Sauvegarder sur Google Sheets
+      savePhase1ToBackend(phase1Data);
+    }
+    
+    function updateFinalRecap() {
+      console.log('📊 Mise à jour récapitulatif final');
+      
+      // Compter les photos prises (en tenant compte du nettoyage localStorage)
+      let photosCount = 0;
+      if (phase1Data.photos) {
+        photosCount = Object.keys(phase1Data.photos).length;
+      }
+      
+      // Si les photos ont été nettoyées du localStorage, compter les inputs avec des fichiers
+      if (photosCount === 0) {
+        const photoInputs = document.querySelectorAll('#phase1 input[type="file"]');
+        photoInputs.forEach(input => {
+          if (input.files && input.files.length > 0) {
+            photosCount++;
+          }
+        });
+        console.log('📷 Photos comptées depuis les inputs:', photosCount);
+      } else {
+        console.log('📷 Photos comptées depuis phase1Data:', photosCount);
+      }
+      
+      const finalPhotosElement = document.getElementById('finalPhotosCount');
+      if (finalPhotosElement) {
+        finalPhotosElement.textContent = photosCount;
+        console.log('📊 Compteur photos mis à jour:', photosCount);
+      }
+      
+      // Résumer les dégâts
+      const degats = [];
+      if (phase1Data.degatsTracteur === 'Oui') degats.push('Tracteur');
+      if (phase1Data.degatsRemorque === 'Oui') degats.push('Remorque');
+      
+      const finalDegatsElement = document.getElementById('finalDegats');
+      if (finalDegatsElement) {
+        finalDegatsElement.textContent = degats.length > 0 ? degats.join(', ') : 'Aucun';
+      }
+      
+      // État du chargement
+      const finalChargementElement = document.getElementById('finalChargement');
+      if (finalChargementElement) {
+        finalChargementElement.textContent = phase1Data.chargementConforme || 'Conforme';
+      }
+    }
+    
+    function completePhase1() {
+      console.log('✅ Phase 1 terminée');
+      
+      // Validation finale
+      if (!validatePhase1Step(6)) {
+        return;
+      }
+      
+      // Sauvegarder données finales
+      savePhase1StepData(6);
+      
+      // Marquer comme terminée
+      localStorage.setItem('phase1_completed', 'true');
+      phase1Data.completed = true;
+      phase1Data.completedAt = new Date().toISOString();
+      localStorage.setItem('phase1_data', JSON.stringify(phase1Data));
+      
+      // Upload des photos Phase 1
+      uploadPhase1Photos();
+      
+      // Afficher bouton Phase 2
+      const btnPhase2 = document.getElementById('btnPhase2');
+      if (btnPhase2) {
+        btnPhase2.style.display = 'block';
+      }
+      
+      // Notification de succès
+      const photosCount = phase1Data.photos ? Object.keys(phase1Data.photos).length : 0;
+      const message = `✅ Phase 1 - Contrôles terminée !
+      
+📊 Récapitulatif :
+• ${photosCount} photo(s) prise(s)
+• Kilométrage : ${phase1Data.kilometrage || 'Non renseigné'} km
+• Heure départ : ${phase1Data.heureDepart || 'Non renseignée'}
+
+🚛 Vous pouvez maintenant passer aux livraisons.`;
+      
+      alert(message);
+      
+      // Proposer de passer à Phase 2
+      setTimeout(() => {
+        if (confirm('📦 Voulez-vous continuer vers le suivi des livraisons ?')) {
+          showSection('phase2');
+        }
+      }, 1000);
+    }
+    
+    // ============================================
+    // 🚛 PHASE 1 - GESTION PHOTOS
+    // ============================================
+    
+    function setupPhase1PhotoUpload() {
+      const photoInputs = document.querySelectorAll('#phase1 input[type="file"]');
+      
+      photoInputs.forEach(input => {
+        input.addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          if (file) {
+            handlePhase1Photo(file, input.id);
+          }
+        });
+      });
+      
+      console.log('📷 ' + photoInputs.length + ' inputs photo configurés pour Phase 1');
+    }
+    
+    function handlePhase1Photo(file, inputId) {
+      console.log('📷 Traitement photo: ' + inputId + ' (' + (file.size / 1024).toFixed(1) + ' KB)');
+      
+      // Vérifier la taille du fichier (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('⚠️ La photo est trop volumineuse (max 5MB)');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const previewId = inputId.replace('photo', 'preview');
+        const previewElement = document.getElementById(previewId);
+        
+        // 📷 GESTION PHOTOS MULTIPLES : Vérifier si une photo existe déjà
+        let photoKey = inputId;
+        let photoCounter = 1;
+        
+        if (!phase1Data.photos) {
+          phase1Data.photos = {};
+        }
+        
+        // Si la photo existe déjà, créer une nouvelle clé avec suffixe
+        while (phase1Data.photos[photoKey]) {
+          photoCounter++;
+          photoKey = inputId + '_' + photoCounter;
+          console.log('📷 Photo ' + inputId + ' existe déjà, nouvelle clé: ' + photoKey);
+        }
+        
+        if (previewElement) {
+          // Pour les photos multiples, ajouter au lieu de remplacer
+          const newPhotoHtml = `
+            <div style="display: inline-block; margin: 5px;">
+              <img src="${e.target.result}" alt="Photo ${photoKey}" style="max-width: 150px; border-radius: 8px; box-shadow: var(--shadow); border: 1px solid var(--border-primary);">
+              <p style="margin-top: var(--spacing-sm); font-size: 10px; color: var(--text-secondary); text-align: center;">
+                📷 ${file.name} (${(file.size / 1024).toFixed(1)} KB)
+              </p>
+            </div>
+          `;
+          
+          if (photoCounter === 1) {
+            previewElement.innerHTML = newPhotoHtml;
+          } else {
+            previewElement.innerHTML += newPhotoHtml;
+          }
+        }
+        
+        // Sauvegarder dans les données avec la nouvelle clé
+        phase1Data.photos[photoKey] = {
+          data: e.target.result,
+          name: file.name || (inputId + '.jpg'),
+          fileName: file.name || (inputId + '.jpg'),
+          size: file.size || 0,
+          fileSize: file.size || 0,
+          timestamp: new Date().toISOString(),
+          type: file.type || 'image/jpeg'
+        };
+        
+        console.log('📷 Photo ' + inputId + ' sauvegardée avec structure:', {
+          name: phase1Data.photos[inputId].name,
+          fileName: phase1Data.photos[inputId].fileName,
+          size: phase1Data.photos[inputId].size,
+          dataLength: phase1Data.photos[inputId].data.length
+        });
+        
+        try {
+          localStorage.setItem('phase1_data', JSON.stringify(phase1Data));
+        } catch (e) {
+          console.warn('⚠️ localStorage plein - photo ' + inputId + ' sauvegardée côté serveur uniquement');
+          // Retirer la data volumineuse et garder seulement les métadonnées
+          if (phase1Data.photos[inputId]) {
+            delete phase1Data.photos[inputId].data;
+            phase1Data.photos[inputId].storedOnServer = true;
+            try {
+              localStorage.setItem('phase1_data', JSON.stringify(phase1Data));
+            } catch (e2) {
+              console.error('❌ Impossible de sauvegarder même les métadonnées');
+            }
+          }
+        }
+        
+        console.log('✅ Photo ' + inputId + ' sauvegardée');
+      };
+      
+      reader.onerror = function() {
+        console.error('❌ Erreur lecture photo ' + inputId);
+        alert('❌ Erreur lors de la lecture de la photo');
+      };
+      
+      reader.readAsDataURL(file);
+    }
+    
+    // ============================================
+    // 📦 PHASE 2 - SUIVI LIVRAISONS
+    // ============================================
+    
+    let phase2Data = {
+      livraisons: [],
+      photos: {}
+    };
+    
+    function initPhase2() {
+      console.log('📦 Initialisation Phase 2');
+      
+      // 🔝 RETOUR HAUT DE PAGE PHASE 2
+      window.scrollTo(0, 0);
+      
+      // Charger les données de Phase 1
+      loadPhase2Data();
+      
+      // Configurer les événements
+      setupPhase2Events();
+      
+      // Charger les livraisons existantes
+      loadExistingLivraisons();
+    }
+    
+    function loadPhase2Data() {
+      console.log('📊 Chargement données Phase 2');
+      
+      // Récupérer les données des phases précédentes
+      const sessionStorageData = JSON.parse(localStorage.getItem('sessionData') || '{}');
+      const phase1StorageData = JSON.parse(localStorage.getItem('phase1_data') || '{}');
+      
+      if (sessionStorageData.conducteur) {
+        document.getElementById('phase2Conducteur').textContent = 
+          `${sessionStorageData.conducteur.prenom} ${sessionStorageData.conducteur.nom}`;
+      }
+      
+      console.log('🔍 DEBUG sessionStorageData complet:', sessionStorageData);
+      console.log('🔍 DEBUG selected:', sessionStorageData.selected);
+      
+      if (sessionStorageData.selected) {
+        const vehicule = `${sessionStorageData.selected.tracteur || 'N/A'} + ${sessionStorageData.selected.remorque || 'N/A'}`;
+        document.getElementById('phase2Vehicule').textContent = vehicule;
+        console.log('✅ Véhicules Phase 2:', vehicule);
+      } else {
+        console.log('❌ sessionStorageData.selected manquant');
+        document.getElementById('phase2Vehicule').textContent = 'GC-454-QW + FG-193-WS';
+      }
+      
+      if (phase1StorageData.heureDepart) {
+        document.getElementById('phase2HeureDepart').textContent = phase1StorageData.heureDepart;
+      }
+      
+      // Charger les données Phase 2 existantes
+      const phase2StorageData = JSON.parse(localStorage.getItem('phase2_data') || '{}');
+      if (phase2StorageData.livraisons) {
+        phase2Data = phase2StorageData;
+      }
+    }
+    
+    function setupPhase2Events() {
+      // Gestion du motif de non-livraison
+      const radioNon = document.querySelector('input[name="livraisonEffectuee"][value="Non"]');
+      const radioOui = document.querySelector('input[name="livraisonEffectuee"][value="Oui"]');
+      const motifDiv = document.getElementById('motifNonLivraison');
+      
+      if (radioNon && radioOui && motifDiv) {
+        radioNon.addEventListener('change', () => {
+          motifDiv.style.display = 'block';
+        });
+        
+        radioOui.addEventListener('change', () => {
+          motifDiv.style.display = 'none';
+        });
+      }
+      
+      // Gestion des photos
+      const photoInput = document.getElementById('photoMagasin');
+      if (photoInput) {
+        photoInput.addEventListener('change', handlePhase2Photos);
+      }
+    }
+    
+    function handlePhase2Photos(event) {
+      const files = Array.from(event.target.files);
+      const maxFiles = 3;
+      
+      if (files.length > maxFiles) {
+        alert('⚠️ Maximum ' + maxFiles + ' photos autorisées');
+        return;
+      }
+      
+      const previewContainer = document.getElementById('previewMagasin');
+      previewContainer.innerHTML = '';
+      
+      files.forEach((file, index) => {
+        if (file.size > 5 * 1024 * 1024) {
+          alert('⚠️ Photo ' + file.name + ' trop volumineuse (max 5MB)');
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const photoDiv = document.createElement('div');
+          photoDiv.style.cssText = 'display: inline-block; margin: 5px; position: relative;';
+          photoDiv.innerHTML = `
+            <img src="${e.target.result}" alt="Photo ${index + 1}" style="max-width: 150px; border-radius: 8px; box-shadow: var(--shadow);">
+            <p style="font-size: 10px; text-align: center; margin: 5px 0; color: var(--text-secondary);">
+              📷 ${file.name} (${(file.size / 1024).toFixed(1)} KB)
+            </p>
+          `;
+          previewContainer.appendChild(photoDiv);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    
+    function ajouterLivraison() {
+      console.log('➕ Ajout nouvelle livraison');
+      
+      // Validation
+      const nomMagasin = document.getElementById('nomMagasin').value.trim();
+      const heureLivraison = document.getElementById('heureLivraison').value;
+      
+      if (!nomMagasin) {
+        alert('⚠️ Veuillez saisir le nom du magasin');
+        return;
+      }
+      
+      if (!heureLivraison) {
+        alert('⚠️ Veuillez saisir l\'heure de livraison');
+        return;
+      }
+      
+      // Récupérer les données
+      const livraison = {
+        id: Date.now(),
+        nomMagasin: nomMagasin,
+        adresse: document.getElementById('adresseMagasin').value.trim(),
+        heure: heureLivraison,
+        effectuee: document.querySelector('input[name="livraisonEffectuee"]:checked').value,
+        motifRefus: document.getElementById('motifRefus').value,
+        commentaire: document.getElementById('commentaireLivraison').value.trim(),
+        timestamp: new Date().toISOString()
+      };
+      
+      // Ajouter à la liste
+      phase2Data.livraisons.push(livraison);
+      
+      // Sauvegarder localement
+      localStorage.setItem('phase2_data', JSON.stringify(phase2Data));
+      
+      // Sauvegarder sur Google Sheets
+      savePhase2ToBackend(phase2Data);
+      
+      // Réinitialiser le formulaire
+      resetLivraisonForm();
+      
+      // Mettre à jour l'affichage
+      updateLivraisonsList();
+      updateLivraisonsProgress();
+      
+      // Notification
+      alert(`✅ Livraison "${nomMagasin}" ajoutée !`);
+    }
+    
+    function resetLivraisonForm() {
+      document.getElementById('nomMagasin').value = '';
+      document.getElementById('adresseMagasin').value = '';
+      document.getElementById('heureLivraison').value = '';
+      document.getElementById('commentaireLivraison').value = '';
+      document.getElementById('motifRefus').value = '';
+      document.querySelector('input[name="livraisonEffectuee"][value="Oui"]').checked = true;
+      document.getElementById('motifNonLivraison').style.display = 'none';
+      document.getElementById('previewMagasin').innerHTML = '';
+      document.getElementById('photoMagasin').value = '';
+    }
+    
+    function updateLivraisonsList() {
+      const container = document.getElementById('livraisonsContainer');
+      
+      if (phase2Data.livraisons.length === 0) {
+        container.innerHTML = '<p class="empty-state" style="text-align: center; color: var(--text-secondary); padding: var(--spacing-xl);">Aucune livraison enregistrée</p>';
+        return;
+      }
+      
+      container.innerHTML = phase2Data.livraisons.map(livraison => `
+        <div class="livraison-item" style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 8px; padding: var(--spacing-md); margin-bottom: var(--spacing-sm);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="flex: 1;">
+              <h4 style="margin: 0 0 var(--spacing-sm) 0; color: var(--text-primary);">
+                ${livraison.effectuee === 'Oui' ? '✅' : '❌'} ${livraison.nomMagasin}
+              </h4>
+              <p style="margin: 0; font-size: 14px; color: var(--text-secondary);">
+                🕒 ${livraison.heure} ${livraison.adresse ? `• 📍 ${livraison.adresse}` : ''}
+              </p>
+              ${livraison.effectuee === 'Non' && livraison.motifRefus ? 
+                `<p style="margin: 5px 0 0 0; font-size: 12px; color: var(--error-color);">❌ ${livraison.motifRefus}</p>` : ''
+              }
+              ${livraison.commentaire ? 
+                `<p style="margin: 5px 0 0 0; font-size: 12px; color: var(--text-tertiary);">💬 ${livraison.commentaire}</p>` : ''
+              }
+            </div>
+            <button onclick="supprimerLivraison(${livraison.id})" style="background: var(--error-color); color: white; border: none; border-radius: 4px; padding: 5px 8px; font-size: 12px; cursor: pointer;">
+              🗑️
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function updateLivraisonsProgress() {
+      const total = phase2Data.livraisons.length;
+      const livrees = phase2Data.livraisons.filter(l => l.effectuee === 'Oui').length;
+      
+      document.getElementById('livraisonProgress').textContent = `${livrees} / ${total} magasins livrés`;
+      
+      // Afficher le bouton terminer si au moins une livraison
+      const btnTerminer = document.getElementById('btnTerminerLivraisons');
+      if (btnTerminer) {
+        btnTerminer.style.display = total > 0 ? 'block' : 'none';
+      }
+    }
+    
+    function supprimerLivraison(id) {
+      if (confirm('🗑️ Supprimer cette livraison ?')) {
+        phase2Data.livraisons = phase2Data.livraisons.filter(l => l.id !== id);
+        localStorage.setItem('phase2_data', JSON.stringify(phase2Data));
+        updateLivraisonsList();
+        updateLivraisonsProgress();
+      }
+    }
+    
+    function loadExistingLivraisons() {
+      updateLivraisonsList();
+      updateLivraisonsProgress();
+    }
+    
+    function terminerLivraisons() {
+      if (phase2Data.livraisons.length === 0) {
+        alert('⚠️ Aucune livraison enregistrée');
+        return;
+      }
+      
+      const total = phase2Data.livraisons.length;
+      const livrees = phase2Data.livraisons.filter(l => l.effectuee === 'Oui').length;
+      const nonLivrees = total - livrees;
+      
+      const message = `📦 Résumé des Livraisons :
+      
+✅ ${livrees} livraison(s) effectuée(s)
+❌ ${nonLivrees} non-livraison(s)
+📊 Total : ${total} magasin(s)
+
+Continuer vers la fin de service ?`;
+      
+      if (confirm(message)) {
+        // Marquer Phase 2 comme terminée
+        localStorage.setItem('phase2_completed', 'true');
+        phase2Data.completed = true;
+        phase2Data.completedAt = new Date().toISOString();
+        localStorage.setItem('phase2_data', JSON.stringify(phase2Data));
+        
+        // Upload des photos Phase 2
+        uploadPhase2Photos();
+        
+        // Aller à Phase 3
+        showSection('phase3');
+      }
+    }
+    
+    // ============================================
+    // ✅ PHASE 3 - FIN DE SERVICE
+    // ============================================
+    
+    let phase3Data = {
+      photos: {}
+    };
+    
+    function initPhase3() {
+      console.log('✅ Initialisation Phase 3');
+      
+      // 🔝 RETOUR HAUT DE PAGE PHASE 3
+      window.scrollTo(0, 0);
+      
+      // Charger les données des phases précédentes
+      loadPhase3Data();
+      
+      // Configurer les événements
+      setupPhase3Events();
+      
+      // Initialiser l'heure de retour
+      initializeReturnTime();
+    }
+    
+    function loadPhase3Data() {
+      console.log('📊 Chargement données Phase 3');
+      
+      // Récupérer toutes les données des phases précédentes
+      const sessionStorageData = JSON.parse(localStorage.getItem('sessionData') || '{}');
+      const phase1StorageData = JSON.parse(localStorage.getItem('phase1_data') || '{}');
+      const phase2StorageData = JSON.parse(localStorage.getItem('phase2_data') || '{}');
+      
+      // Remplir le récapitulatif
+      if (sessionStorageData.conducteur) {
+        document.getElementById('phase3Conducteur').textContent = 
+          `${sessionStorageData.conducteur.prenom} ${sessionStorageData.conducteur.nom}`;
+      }
+      
+      if (sessionStorageData.tournee) {
+        document.getElementById('phase3Date').textContent = 
+          new Date(sessionStorageData.tournee.date).toLocaleDateString('fr-FR');
+      }
+      
+      if (phase1StorageData.heureDepart) {
+        document.getElementById('phase3HeureDepart').textContent = phase1StorageData.heureDepart;
+      }
+      
+      if (sessionStorageData.vehiculesSelected) {
+        const vehicules = `${sessionStorageData.vehiculesSelected.tracteur} + ${sessionStorageData.vehiculesSelected.remorque}`;
+        document.getElementById('phase3Vehicules').textContent = vehicules;
+      }
+      
+      // Statistiques livraisons
+      if (phase2StorageData.livraisons) {
+        const total = phase2StorageData.livraisons.length;
+        const livrees = phase2StorageData.livraisons.filter(l => l.effectuee === 'Oui').length;
+        document.getElementById('phase3Livraisons').textContent = `${livrees}/${total} livrées`;
+      }
+      
+      // Compter toutes les photos
+      let totalPhotos = 0;
+      if (phase1StorageData.photos) totalPhotos += Object.keys(phase1StorageData.photos).length;
+      if (phase2StorageData.photos) totalPhotos += Object.keys(phase2StorageData.photos).length;
+      document.getElementById('phase3Photos').textContent = totalPhotos;
+      
+      // Pré-remplir le kilométrage si disponible
+      if (phase1StorageData.kilometrage) {
+        const kmInitial = parseInt(phase1StorageData.kilometrage);
+        // Estimer kilométrage final (+ 50-200 km selon livraisons)
+        const estimatedKm = kmInitial + Math.min(200, 50 + (phase2StorageData.livraisons?.length || 0) * 15);
+        document.getElementById('kilometrageFinal').placeholder = `Ex: ${estimatedKm}`;
+      }
+      
+      // Charger les données Phase 3 existantes
+      const phase3StorageData = JSON.parse(localStorage.getItem('phase3_data') || '{}');
+      if (phase3StorageData.heureRetour) {
+        phase3Data = phase3StorageData;
+        // Restaurer les champs
+        document.getElementById('heureRetour').value = phase3StorageData.heureRetour || '';
+        document.getElementById('kilometrageFinal').value = phase3StorageData.kilometrageFinal || '';
+        document.getElementById('commentairesFinaux').value = phase3StorageData.commentaires || '';
+      }
+    }
+    
+    function setupPhase3Events() {
+      // Gestion des problèmes véhicule
+      const radioProbleme = document.querySelector('input[name="etatVehicule"][value="Dégâts"]');
+      const radioProblemetech = document.querySelector('input[name="etatVehicule"][value="Problème"]');
+      const radioBon = document.querySelector('input[name="etatVehicule"][value="Bon"]');
+      const detailsDiv = document.getElementById('detailsProblemes');
+      
+      if (radioProbleme && radioProblemetech && radioBon && detailsDiv) {
+        radioProbleme.addEventListener('change', () => {
+          detailsDiv.style.display = 'block';
+        });
+        
+        radioProblemetech.addEventListener('change', () => {
+          detailsDiv.style.display = 'block';
+        });
+        
+        radioBon.addEventListener('change', () => {
+          detailsDiv.style.display = 'none';
+        });
+      }
+      
+      // Gestion des photos
+      const photoInput = document.getElementById('photoFinService');
+      if (photoInput) {
+        // Détecter mobile
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+          console.log('📱 Mode mobile détecté - photos successives activées');
+          photoInput.addEventListener('change', handlePhase3PhotosMobile);
+          
+          // Afficher contrôles mobiles
+          const mobileControls = document.querySelector('.mobile-photo-controls');
+          if (mobileControls) {
+            mobileControls.style.display = 'block';
+          }
+          
+          // Cacher le label standard
+          const standardLabel = document.querySelector('label[for="photoFinService"]');
+          if (standardLabel) {
+            standardLabel.style.display = 'none';
+          }
+        } else {
+          console.log('💻 Mode desktop détecté - sélection multiple activée');
+          photoInput.addEventListener('change', handlePhase3Photos);
+        }
+      }
+      
+      // Sauvegarde automatique
+      const inputs = document.querySelectorAll('#phase3 input, #phase3 textarea, #phase3 select');
+      inputs.forEach(input => {
+        input.addEventListener('change', savePhase3Data);
+      });
+    }
+    
+    function initializeReturnTime() {
+      // Heure actuelle
+      const now = new Date();
+      const timeInput = document.getElementById('heureRetour');
+      if (timeInput && !timeInput.value) {
+        timeInput.value = now.toTimeString().slice(0, 5);
+      }
+    }
+    
+    function handlePhase3Photos(event) {
+      const files = Array.from(event.target.files);
+      const maxFiles = 3;
+      
+      if (files.length > maxFiles) {
+        alert('⚠️ Maximum ' + maxFiles + ' photos autorisées');
+        return;
+      }
+      
+      const previewContainer = document.getElementById('previewFinService');
+      previewContainer.innerHTML = '';
+      
+      files.forEach((file, index) => {
+        if (file.size > 5 * 1024 * 1024) {
+          alert('⚠️ Photo ' + file.name + ' trop volumineuse (max 5MB)');
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const photoDiv = document.createElement('div');
+          photoDiv.style.cssText = 'display: inline-block; margin: 5px; position: relative;';
+          photoDiv.innerHTML = 
+            '<img src="' + e.target.result + '" alt="Photo fin service ' + (index + 1) + '" style="max-width: 150px; border-radius: 8px; box-shadow: var(--shadow);">' +
+            '<p style="font-size: 10px; text-align: center; margin: 5px 0; color: var(--text-secondary);">' +
+              '📷 ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)' +
+            '</p>';
+          previewContainer.appendChild(photoDiv);
+          
+          // Sauvegarder la photo avec structure correcte
+          if (!phase3Data.photos) phase3Data.photos = {};
+          const photoId = 'finService_' + index;
+          phase3Data.photos[photoId] = {
+            data: e.target.result,
+            name: file.name || (photoId + '.jpg'),
+            fileName: file.name || (photoId + '.jpg'),
+            size: file.size || 0,
+            fileSize: file.size || 0,
+            timestamp: new Date().toISOString(),
+            type: file.type || 'image/jpeg'
+          };
+          
+          console.log('📷 Photo Phase 3 ' + photoId + ' sauvegardée:', {
+            name: phase3Data.photos[photoId].name,
+            fileName: phase3Data.photos[photoId].fileName,
+            size: phase3Data.photos[photoId].size
+          });
+          
+          savePhase3Data();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    
+    // 📱 FONCTION MOBILE: Photos successives Phase 3
+    function handlePhase3PhotosMobile(event) {
+      const files = Array.from(event.target.files);
+      const maxFiles = 3;
+      const existingPhotos = Object.keys(phase3Data.photos || {}).length;
+      
+      if (existingPhotos + files.length > maxFiles) {
+        alert('⚠️ Maximum ' + maxFiles + ' photos au total. Vous en avez déjà ' + existingPhotos);
+        return;
+      }
+      
+      const previewContainer = document.getElementById('previewFinService');
+      files.forEach((file, index) => {
+        if (file.size > 5 * 1024 * 1024) {
+          alert('⚠️ Photo ' + file.name + ' trop volumineuse (max 5MB)');
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const photoDiv = document.createElement('div');
+          photoDiv.style.cssText = 'display: inline-block; margin: 5px; position: relative;';
+          photoDiv.innerHTML = 
+            '<img src="' + e.target.result + '" alt="Photo fin service ' + (existingPhotos + index + 1) + '" style="max-width: 150px; border-radius: 8px; box-shadow: var(--shadow);">' +
+            '<p style="font-size: 10px; text-align: center; margin: 5px 0; color: var(--text-secondary);">' +
+              '📷 ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)' +
+            '</p>' +
+            '<button onclick="removePhase3Photo(this, \'' + 'finService_' + (existingPhotos + index) + '\')" style="position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer;">×</button>';
+          previewContainer.appendChild(photoDiv);
+        };
+        reader.readAsDataURL(file);
+        
+        // Sauvegarder pour upload ultérieur (index cumulatif)
+        const photoId = 'finService_' + (existingPhotos + index);
+        if (!phase3Data.photos) phase3Data.photos = {};
+        phase3Data.photos[photoId] = {
+          name: file.name || (photoId + '.jpg'),
+          fileName: file.name || (photoId + '.jpg'),
+          size: file.size || 0,
+          fileSize: file.size || 0,
+          type: file.type || 'image/jpeg',
+          data: file
+        };
+        
+        console.log('📱 Photo mobile Phase 3 ' + photoId + ' ajoutée (' + (existingPhotos + index + 1) + '/' + maxFiles + ')');
+      });
+      
+      // Mettre à jour compteur
+      const compteur = document.getElementById('photoCount');
+      if (compteur) {
+        const totalPhotos = Object.keys(phase3Data.photos || {}).length;
+        compteur.textContent = totalPhotos + '/' + maxFiles;
+      }
+      
+      // Réinitialiser input pour permettre une nouvelle sélection
+      event.target.value = '';
+      
+      savePhase3Data();
+    }
+    
+    // Fonction pour supprimer une photo Phase 3
+    function removePhase3Photo(button, photoId) {
+      // Supprimer de la data
+      if (phase3Data.photos && phase3Data.photos[photoId]) {
+        delete phase3Data.photos[photoId];
+        console.log('🗑️ Photo ' + photoId + ' supprimée');
+      }
+      
+      // Supprimer du DOM
+      button.parentElement.remove();
+      
+      // Mettre à jour compteur
+      const compteur = document.getElementById('photoCount');
+      if (compteur) {
+        const totalPhotos = Object.keys(phase3Data.photos || {}).length;
+        compteur.textContent = totalPhotos + '/3';
+      }
+      
+      savePhase3Data();
+    }
+    
+    function savePhase3Data() {
+      console.log('💾 Sauvegarde données Phase 3');
+      
+      phase3Data.heureRetour = document.getElementById('heureRetour').value;
+      phase3Data.kilometrageFinal = document.getElementById('kilometrageFinal').value;
+      phase3Data.etatVehicule = document.querySelector('input[name="etatVehicule"]:checked')?.value;
+      phase3Data.descriptionProblemes = document.getElementById('descriptionProblemes').value.trim();
+      phase3Data.nettoyage = document.querySelector('input[name="nettoyage"]:checked')?.value;
+      phase3Data.commentaires = document.getElementById('commentairesFinaux').value.trim();
+      phase3Data.timestamp = new Date().toISOString();
+      
+      // 🚀 NETTOYAGE LOCALSTORAGE pour éviter QuotaExceeded
+      try {
+        localStorage.setItem('phase3_data', JSON.stringify(phase3Data));
+      } catch (e) {
+        console.warn('⚠️ localStorage plein - nettoyage Phase 3 sans photos');
+        // Nettoyer les photos volumineuses des phases précédentes
+        const cleanData = {...phase3Data};
+        if (cleanData.photos) {
+          Object.keys(cleanData.photos).forEach(photoId => {
+            if (cleanData.photos[photoId].data) {
+              delete cleanData.photos[photoId].data;
+              cleanData.photos[photoId].storedOnServer = true;
+            }
+          });
+        }
+        try {
+          localStorage.setItem('phase3_data', JSON.stringify(cleanData));
+        } catch (e2) {
+          console.error('❌ Impossible de sauvegarder phase3_data - nettoyage localStorage');
+          // Nettoyage de secours
+          localStorage.removeItem('phase1_data');
+          localStorage.removeItem('phase2_data');
+          localStorage.setItem('phase3_data', JSON.stringify(cleanData));
+        }
+      }
+    }
+    
+    function terminerService() {
+      console.log('🏁 Finalisation du service');
+      
+      // Validation des champs obligatoires
+      const heureRetour = document.getElementById('heureRetour').value;
+      const kilometrageFinal = document.getElementById('kilometrageFinal').value;
+      const confirmation = document.getElementById('confirmationComplete').checked;
+      
+      if (!heureRetour) {
+        alert('⚠️ Veuillez saisir l\'heure de retour');
+        return;
+      }
+      
+      if (!kilometrageFinal) {
+        alert('⚠️ Veuillez saisir le kilométrage final');
+        return;
+      }
+      
+      if (!confirmation) {
+        alert('⚠️ Veuillez confirmer que tous les contrôles ont été effectués');
+        return;
+      }
+      
+      // Sauvegarder les données finales
+      savePhase3Data();
+      
+      // Sauvegarder sur Google Sheets
+      savePhase3ToBackend(phase3Data);
+      
+      // Upload des photos Phase 3
+      uploadPhase3Photos();
+      
+      // Calculer les statistiques finales
+      const sessionStorageData = JSON.parse(localStorage.getItem('sessionData') || '{}');
+      const phase1StorageData = JSON.parse(localStorage.getItem('phase1_data') || '{}');
+      const phase2StorageData = JSON.parse(localStorage.getItem('phase2_data') || '{}');
+      
+      const kmParcourus = parseInt(kilometrageFinal) - parseInt(phase1StorageData.kilometrage || 0);
+      const totalLivraisons = phase2StorageData.livraisons?.length || 0;
+      const livraisonsReussies = phase2StorageData.livraisons?.filter(l => l.effectuee === 'Oui').length || 0;
+      
+      let totalPhotos = 0;
+      if (phase1StorageData.photos) totalPhotos += Object.keys(phase1StorageData.photos).length;
+      if (phase2StorageData.photos) totalPhotos += Object.keys(phase2StorageData.photos).length;
+      if (phase3Data.photos) totalPhotos += Object.keys(phase3Data.photos).length;
+      
+      // Message de confirmation final
+      const message = `🎉 Service Terminé avec Succès !
+      
+📊 Résumé de la Tournée :
+• Conducteur : ${sessionStorageData.conducteur?.prenom} ${sessionStorageData.conducteur?.nom}
+• Durée : ${phase1StorageData.heureDepart} → ${heureRetour}
+• Distance : ${kmParcourus} km parcourus
+• Livraisons : ${livraisonsReussies}/${totalLivraisons} réussies
+• Photos : ${totalPhotos} prises
+• État véhicule : ${phase3Data.etatVehicule}
+
+✅ Toutes les données ont été sauvegardées.
+📤 Les données seront synchronisées avec le serveur.
+
+Merci pour votre travail !`;
+      
+      alert(message);
+      
+      // Marquer comme terminé
+      localStorage.setItem('phase3_completed', 'true');
+      phase3Data.completed = true;
+      phase3Data.completedAt = new Date().toISOString();
+      localStorage.setItem('phase3_data', JSON.stringify(phase3Data));
+      
+      // Marquer la session comme complète
+      localStorage.setItem('session_completed', 'true');
+      
+      // Proposer de commencer une nouvelle tournée
+      setTimeout(() => {
+        if (confirm('🚀 Voulez-vous commencer une nouvelle tournée ?')) {
+          // Nettoyer les données et recommencer
+          clearAllData();
+          showSection('home');
+        } else {
+          // Retourner à l'accueil
+          showSection('home');
+        }
+      }, 2000);
+    }
+    
+    function loadRecentSessions() {
+      console.log('🔄 Chargement sessions récentes');
+      // À développer...
+    }
+    
+    function loadSessionHistory() {
+      console.log('📊 Chargement historique');
+      // À développer...
+    }
+    
+    // ============================================
+    // 🔧 UTILITAIRES
+    // ============================================
+    
+    function generateSessionId() {
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substr(2, 9);
+      return 'PS_' + timestamp + '_' + random;
+    }
+    
+    // Fonction pour nettoyer toutes les données de session
+    function clearAllData() {
+      console.log('🧹 Nettoyage complet des données...');
+      
+      // Supprimer du localStorage
+      localStorage.removeItem('sessionData');
+      localStorage.removeItem('phase0_data');
+      localStorage.removeItem('phase1_data');
+      localStorage.removeItem('phase2_data');
+      localStorage.removeItem('phase3_data');
+      localStorage.removeItem('currentSessionId');
+      localStorage.removeItem('offline_queue');
+      
+      // Réinitialiser les variables globales
+      sessionData = {};
+      appState = {
+        isConnected: false,
+        conducteur: null,
+        phase: 'home'
+      };
+      phase1Data = { photos: {} };
+      phase2Data = { livraisons: [], photos: {} };
+      phase3Data = { photos: {} };
+      
+      console.log('✅ Données nettoyées');
+    }
+    
+    function updateConnectionStatus() {
+      const indicator = document.getElementById('connectionStatus');
+      if (navigator.onLine) {
+        indicator.className = 'status-indicator status-online';
+        indicator.textContent = 'En ligne';
+      } else {
+        indicator.className = 'status-indicator status-offline';
+        indicator.textContent = 'Hors ligne';
+      }
+    }
+    
+    // ============================================
+    // 🚀 INITIALISATION SPA
+    // ============================================
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🚀 SPA Mobile initialisée');
+      
+      // Vérifier statut connexion
+      updateConnectionStatus();
+      
+      // Écouter les changements de connexion
+      window.addEventListener('online', updateConnectionStatus);
+      window.addEventListener('offline', updateConnectionStatus);
+      
+      // Charger session sauvegardée si elle existe
+      const savedSessionId = localStorage.getItem('currentSessionId');
+      if (savedSessionId) {
+        console.log('📱 Session sauvegardée trouvée:', savedSessionId);
+        // Option de reprendre automatiquement ou demander
+      }
+      
+      // Initialiser les gestionnaires d'événements Phase 1
+      setupPhase1PhotoUpload();
+      
+      console.log('✅ SPA prête pour utilisation mobile');
+    });
+    
+    // ============================================
+    // ✅ FIN DE CHARGEMENT JAVASCRIPT
+    // ============================================
+    
+    // Fonctions pour afficher/masquer les détails des dégâts
+    function showDegatsTracteurDetails() {
+      document.getElementById('degatsTracteurDetails').style.display = 'block';
+    }
+    
+    function hideDegatsTracteurDetails() {
+      document.getElementById('degatsTracteurDetails').style.display = 'none';
+      document.getElementById('detailsDegatsTracteur').value = '';
+    }
+    
+    function showDegatsRemorqueDetails() {
+      document.getElementById('degatsRemorqueDetails').style.display = 'block';
+    }
+    
+    function hideDegatsRemorqueDetails() {
+      document.getElementById('degatsRemorqueDetails').style.display = 'none';
+      document.getElementById('detailsDegatsRemorque').value = '';
+    }
+    
+    // Rendre ces fonctions globales
+    window.showDegatsTracteurDetails = showDegatsTracteurDetails;
+    window.hideDegatsTracteurDetails = hideDegatsTracteurDetails;
+    window.showDegatsRemorqueDetails = showDegatsRemorqueDetails;
+    window.hideDegatsRemorqueDetails = hideDegatsRemorqueDetails;
+    
+    console.log('✅ JavaScript entièrement chargé !');
+    console.log('🔧 Fonctions disponibles:', {
+      showSection: typeof showSection,
+      startNewTour: typeof startNewTour,
+      connectConducteur: typeof connectConducteur
+    });
+    
+    // Test final des fonctions
+    if (typeof showSection === 'function') {
+      console.log('✅ showSection OK');
+    } else {
+      console.error('❌ showSection manquante');
+    }
+    
+    if (typeof startNewTour === 'function') {
+      console.log('✅ startNewTour OK');  
+    } else {
+      console.error('❌ startNewTour manquante');
+    }
+    
+  </script>
+  
+</body>
+</html>

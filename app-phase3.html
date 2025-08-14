@@ -1,0 +1,735 @@
+<script>
+// ========================================
+// 🏁 PHASE 3 - FIN DE SERVICE
+// ========================================
+
+let currentStep = 1;
+const totalSteps = 6;
+let formData = {};
+let sessionData = null;
+let photos = {};
+
+// ========================================
+// 🚀 INITIALISATION
+// ========================================
+
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🏁 Phase 3 - Fin de Service initialisée');
+  
+  // Récupérer les données de session
+  loadSessionData();
+  
+  // Initialiser les événements
+  initializeEventListeners();
+  
+  // Vérifier la connexion
+  checkConnection();
+  
+  // Mettre à jour l'affichage
+  updateDisplay();
+});
+
+function loadSessionData() {
+  try {
+    // Récupérer depuis l'URL ou localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session') || localStorage.getItem('currentSessionId');
+    
+    if (!sessionId) {
+      console.error('❌ Aucun ID de session trouvé');
+      alert('Erreur: Aucune session active. Retour à la Phase 1.');
+      window.location.href = 'https://script.google.com/macros/s/AKfycbwzKW0vQGiKkTmqmr5mAAiC-QQFCrN2M2e5_1LaDa_NQYbxHQIIGZGNV3tMZpBwB1F_/exec?phase=1';
+      return;
+    }
+    
+    console.log('📋 Session ID:', sessionId);
+    
+    // Stocker l'ID de session
+    localStorage.setItem('currentSessionId', sessionId);
+    
+    // Charger les données depuis le serveur
+    google.script.run
+      .withSuccessHandler(onSessionDataLoaded)
+      .withFailureHandler(onSessionDataError)
+      .getSessionData(sessionId);
+      
+  } catch (error) {
+    console.error('❌ Erreur chargement session:', error);
+  }
+}
+
+function onSessionDataLoaded(data) {
+  console.log('✅ Données session chargées:', data);
+  sessionData = data;
+  
+  // Mettre à jour l'affichage des infos session
+  updateSessionInfo();
+  
+  // Pré-remplir les champs si on revient sur cette phase
+  if (data && data.phase3_data) {
+    prefillFormData(data.phase3_data);
+  }
+}
+
+function onSessionDataError(error) {
+  console.error('❌ Erreur récupération session:', error);
+  alert('Erreur de connexion. Vérifiez votre réseau.');
+}
+
+function updateSessionInfo() {
+  const sessionText = document.getElementById('sessionText');
+  if (sessionData && sessionText) {
+    const sessionId = localStorage.getItem('currentSessionId');
+    sessionText.innerHTML = `
+      <strong>Session:</strong> ${sessionId}<br>
+      <strong>Conducteur:</strong> ${sessionData.conducteur || 'N/A'}<br>
+      <strong>Site:</strong> ${sessionData.site || 'N/A'}
+    `;
+  }
+}
+
+// ========================================
+// 🎮 GESTION DES ÉVÉNEMENTS
+// ========================================
+
+function initializeEventListeners() {
+  // Gestion des photos
+  document.querySelectorAll('input[type="file"]').forEach(input => {
+    input.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        processPhoto(this.id, file);
+      }
+    });
+  });
+  
+  // Gestion des checkboxes exclusives
+  initializeCheckboxGroups();
+  
+  // Sauvegarde automatique
+  document.querySelectorAll('input, select, textarea').forEach(element => {
+    element.addEventListener('change', saveFormData);
+  });
+}
+
+function initializeCheckboxGroups() {
+  // Groupe nombre de livraisons
+  const livraisonsCheckboxes = document.querySelectorAll('input[name="nombreLivraisons"]');
+  livraisonsCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      if (this.checked) {
+        livraisonsCheckboxes.forEach(other => {
+          if (other !== this) other.checked = false;
+        });
+      }
+    });
+  });
+  
+  // Groupe nombre de reprises
+  const reprisesCheckboxes = document.querySelectorAll('input[name="nombreReprises"]');
+  reprisesCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      if (this.checked) {
+        reprisesCheckboxes.forEach(other => {
+          if (other !== this) other.checked = false;
+        });
+      }
+    });
+  });
+}
+
+// ========================================
+// 📸 GESTION DES PHOTOS
+// ========================================
+
+function takePhoto(photoId) {
+  console.log('📸 Prise de photo:', photoId);
+  const input = document.getElementById('photo' + photoId.charAt(0).toUpperCase() + photoId.slice(1));
+  if (input) {
+    input.click();
+  }
+}
+
+function processPhoto(inputId, file) {
+  const photoId = inputId.replace('photo', '').toLowerCase();
+  console.log('🔄 Traitement photo:', photoId);
+  
+  if (file.size > 5 * 1024 * 1024) { // 5MB
+    alert('⚠️ Photo trop volumineuse (max 5MB)');
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const base64 = e.target.result;
+    
+    // Stocker la photo
+    photos[photoId] = {
+      data: base64,
+      filename: `${photoId}_${Date.now()}.jpg`,
+      timestamp: new Date().toISOString()
+    };
+    
+    // Afficher l'aperçu
+    const preview = document.getElementById('preview' + photoId.charAt(0).toUpperCase() + photoId.slice(1));
+    if (preview) {
+      preview.src = base64;
+      preview.style.display = 'block';
+    }
+    
+    // Marquer le conteneur comme ayant une photo
+    const container = document.querySelector(`[onclick="takePhoto('${photoId}')"]`);
+    if (container) {
+      container.classList.add('has-photo');
+    }
+    
+    console.log('✅ Photo traitée:', photoId);
+    saveFormData();
+  };
+  
+  reader.readAsDataURL(file);
+}
+
+// ========================================
+// 🔄 NAVIGATION ENTRE ÉTAPES
+// ========================================
+
+function nextStep() {
+  if (!validateCurrentStep()) {
+    return;
+  }
+  
+  saveFormData();
+  
+  if (currentStep < totalSteps) {
+    // Masquer l'étape actuelle
+    document.getElementById(`step${currentStep}`).classList.remove('active');
+    
+    // Passer à l'étape suivante
+    currentStep++;
+    
+    // Afficher la nouvelle étape
+    const nextStepElement = document.getElementById(`step${currentStep}`);
+    nextStepElement.classList.add('active');
+    
+    // Mettre à jour le récapitulatif si on arrive à l'étape finale
+    if (currentStep === totalSteps) {
+      updateFinalSummary();
+    }
+    
+    // Scroll vers le haut
+    window.scrollTo(0, 0);
+    
+    console.log(`➡️ Étape ${currentStep}/${totalSteps}`);
+  }
+}
+
+function prevStep() {
+  if (currentStep > 1) {
+    // Masquer l'étape actuelle
+    document.getElementById(`step${currentStep}`).classList.remove('active');
+    
+    // Retourner à l'étape précédente
+    currentStep--;
+    
+    // Afficher l'étape précédente
+    document.getElementById(`step${currentStep}`).classList.add('active');
+    
+    // Scroll vers le haut
+    window.scrollTo(0, 0);
+    
+    console.log(`⬅️ Étape ${currentStep}/${totalSteps}`);
+  }
+}
+
+function goBackToPhase2() {
+  const sessionId = localStorage.getItem('currentSessionId');
+  if (sessionId) {
+    window.location.href = `https://script.google.com/macros/s/AKfycbwzKW0vQGiKkTmqmr5mAAiC-QQFCrN2M2e5_1LaDa_NQYbxHQIIGZGNV3tMZpBwB1F_/exec?phase=2&session=${sessionId}`;
+  } else {
+    alert('Erreur: Session non trouvée');
+  }
+}
+
+// ========================================
+// ✅ VALIDATION
+// ========================================
+
+function validateCurrentStep() {
+  console.log(`🔍 Validation étape ${currentStep}`);
+  
+  switch(currentStep) {
+    case 1:
+      return validateStep1();
+    case 2:
+      return validateStep2();
+    case 3:
+      return validateStep3();
+    case 4:
+      return validateStep4();
+    case 5:
+      return validateStep5();
+    case 6:
+      return true; // Pas de validation pour le récapitulatif
+    default:
+      return true;
+  }
+}
+
+function validateStep1() {
+  const required = ['siteAffectation', 'tourContratFin', 'heureFinTournee'];
+  
+  for (let fieldId of required) {
+    const field = document.getElementById(fieldId);
+    if (!field || !field.value.trim()) {
+      alert(`⚠️ Veuillez remplir le champ "${field?.labels?.[0]?.textContent || fieldId}"`);
+      field?.focus();
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+function validateStep2() {
+  // Vérifier qu'au moins un nombre de livraisons est sélectionné
+  const livraisonsChecked = document.querySelector('input[name="nombreLivraisons"]:checked');
+  const livraisonsAutre = document.getElementById('nombreLivraisonsAutre').value.trim();
+  
+  if (!livraisonsChecked && !livraisonsAutre) {
+    alert('⚠️ Veuillez indiquer le nombre de livraisons effectuées');
+    return false;
+  }
+  
+  // Vérifier qu'au moins un nombre de reprises est sélectionné
+  const reprisesChecked = document.querySelector('input[name="nombreReprises"]:checked');
+  const reprisesAutre = document.getElementById('nombreReprisesAutre').value.trim();
+  
+  if (!reprisesChecked && !reprisesAutre) {
+    alert('⚠️ Veuillez indiquer le nombre de reprises effectuées');
+    return false;
+  }
+  
+  return true;
+}
+
+function validateStep3() {
+  const requiredPhotos = ['pdaReprises', 'caisseVides'];
+  
+  for (let photoId of requiredPhotos) {
+    if (!photos[photoId]) {
+      alert(`⚠️ La photo "${photoId}" est obligatoire`);
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+function validateStep4() {
+  const required = ['immatRemorqueFin'];
+  const requiredPhotos = ['lettreVoiture', 'caisseNettoyee'];
+  
+  // Vérifier les champs requis
+  for (let fieldId of required) {
+    const field = document.getElementById(fieldId);
+    if (!field || !field.value.trim()) {
+      alert(`⚠️ Veuillez remplir le champ "${field?.labels?.[0]?.textContent || fieldId}"`);
+      field?.focus();
+      return false;
+    }
+  }
+  
+  // Vérifier les photos requises
+  for (let photoId of requiredPhotos) {
+    if (!photos[photoId]) {
+      alert(`⚠️ La photo "${photoId}" est obligatoire`);
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+function validateStep5() {
+  const required = ['immatTracteurFin', 'kilometrageRetour'];
+  const requiredPhotos = ['carburantTracteurFin'];
+  
+  // Vérifier les champs requis
+  for (let fieldId of required) {
+    const field = document.getElementById(fieldId);
+    if (!field || !field.value.trim()) {
+      alert(`⚠️ Veuillez remplir le champ "${field?.labels?.[0]?.textContent || fieldId}"`);
+      field?.focus();
+      return false;
+    }
+  }
+  
+  // Vérifier les photos requises
+  for (let photoId of requiredPhotos) {
+    if (!photos[photoId]) {
+      alert(`⚠️ La photo "${photoId}" est obligatoire`);
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+// ========================================
+// 💾 SAUVEGARDE DES DONNÉES
+// ========================================
+
+function saveFormData() {
+  // Récupérer toutes les données du formulaire
+  formData = {
+    // Étape 1: Informations générales
+    siteAffectation: document.getElementById('siteAffectation')?.value || '',
+    tourContratFin: document.getElementById('tourContratFin')?.value || '',
+    heureFinTournee: document.getElementById('heureFinTournee')?.value || '',
+    
+    // Étape 2: Reprises
+    nombreLivraisons: getSelectedCheckboxValue('nombreLivraisons') || document.getElementById('nombreLivraisonsAutre')?.value || '',
+    nombreReprises: getSelectedCheckboxValue('nombreReprises') || document.getElementById('nombreReprisesAutre')?.value || '',
+    magasinsSansReprise: document.getElementById('magasinsSansReprise')?.value || '',
+    
+    // Étape 4: Retour sur base
+    immatRemorqueFin: document.getElementById('immatRemorqueFin')?.value || '',
+    
+    // Étape 5: Tracteur final
+    immatTracteurFin: document.getElementById('immatTracteurFin')?.value || '',
+    kilometrageRetour: document.getElementById('kilometrageRetour')?.value || '',
+    commentairesFinaux: document.getElementById('commentairesFinaux')?.value || '',
+    
+    // Métadonnées
+    lastSaved: new Date().toISOString(),
+    photos: Object.keys(photos)
+  };
+  
+  // Sauvegarder localement
+  localStorage.setItem('phase3_data', JSON.stringify(formData));
+  localStorage.setItem('phase3_photos', JSON.stringify(photos));
+  
+  console.log('💾 Données Phase 3 sauvegardées:', formData);
+}
+
+function getSelectedCheckboxValue(name) {
+  const checked = document.querySelector(`input[name="${name}"]:checked`);
+  return checked ? checked.value : null;
+}
+
+function prefillFormData(data) {
+  console.log('🔄 Pré-remplissage des données:', data);
+  
+  Object.keys(data).forEach(key => {
+    const element = document.getElementById(key);
+    if (element) {
+      if (element.type === 'checkbox' || element.type === 'radio') {
+        element.checked = data[key];
+      } else {
+        element.value = data[key];
+      }
+    }
+  });
+  
+  // Restaurer les photos
+  const savedPhotos = localStorage.getItem('phase3_photos');
+  if (savedPhotos) {
+    photos = JSON.parse(savedPhotos);
+    
+    Object.keys(photos).forEach(photoId => {
+      const preview = document.getElementById('preview' + photoId.charAt(0).toUpperCase() + photoId.slice(1));
+      if (preview && photos[photoId]) {
+        preview.src = photos[photoId].data;
+        preview.style.display = 'block';
+        
+        const container = document.querySelector(`[onclick="takePhoto('${photoId}')"]`);
+        if (container) {
+          container.classList.add('has-photo');
+        }
+      }
+    });
+  }
+}
+
+// ========================================
+// 📊 RÉCAPITULATIF FINAL
+// ========================================
+
+function updateFinalSummary() {
+  console.log('📊 Mise à jour du récapitulatif final');
+  
+  // Informations générales
+  const generalSummary = document.getElementById('generalSummaryFinal');
+  if (generalSummary) {
+    generalSummary.innerHTML = `
+      <div class="summary-row"><strong>Site d'affectation:</strong> ${formData.siteAffectation}</div>
+      <div class="summary-row"><strong>Tour/Contrat:</strong> ${formData.tourContratFin}</div>
+      <div class="summary-row"><strong>Heure fin tournée:</strong> ${formData.heureFinTournee}</div>
+    `;
+  }
+  
+  // Reprises
+  const reprisesSummary = document.getElementById('reprisesSummary');
+  if (reprisesSummary) {
+    reprisesSummary.innerHTML = `
+      <div class="summary-row"><strong>Nombre de livraisons:</strong> ${formData.nombreLivraisons}</div>
+      <div class="summary-row"><strong>Nombre de reprises:</strong> ${formData.nombreReprises}</div>
+      <div class="summary-row"><strong>Magasins sans reprise:</strong> ${formData.magasinsSansReprise || 'Aucun'}</div>
+    `;
+  }
+  
+  // Retour sur base
+  const retourBaseSummary = document.getElementById('retourBaseSummary');
+  if (retourBaseSummary) {
+    retourBaseSummary.innerHTML = `
+      <div class="summary-row"><strong>Remorque:</strong> ${formData.immatRemorqueFin}</div>
+      <div class="summary-row"><strong>Photos obligatoires:</strong> ✅ Lettre de voiture, Caisse nettoyée</div>
+    `;
+  }
+  
+  // Tracteur final
+  const tracteurFinalSummary = document.getElementById('tracteurFinalSummary');
+  if (tracteurFinalSummary) {
+    tracteurFinalSummary.innerHTML = `
+      <div class="summary-row"><strong>Tracteur:</strong> ${formData.immatTracteurFin}</div>
+      <div class="summary-row"><strong>Kilométrage retour:</strong> ${formData.kilometrageRetour} km</div>
+      <div class="summary-row"><strong>Commentaires:</strong> ${formData.commentairesFinaux || 'Aucun'}</div>
+    `;
+  }
+  
+  // Statistiques
+  updateFinalStats();
+  
+  // Session ID final
+  const finalSessionId = document.getElementById('finalSessionId');
+  if (finalSessionId) {
+    finalSessionId.textContent = localStorage.getItem('currentSessionId');
+  }
+}
+
+function updateFinalStats() {
+  // Nombre de photos Phase 3
+  const totalPhotosPhase3 = document.getElementById('totalPhotosPhase3');
+  if (totalPhotosPhase3) {
+    totalPhotosPhase3.textContent = Object.keys(photos).length;
+  }
+  
+  // Nombre total de magasins (depuis sessionData)
+  const totalMagasinsLivres = document.getElementById('totalMagasinsLivres');
+  if (totalMagasinsLivres && sessionData) {
+    // Récupérer depuis les données de session ou formData
+    totalMagasinsLivres.textContent = sessionData.magasins_count || formData.nombreLivraisons || '0';
+  }
+  
+  // Durée de la tournée
+  const dureeTournee = document.getElementById('dureeTournee');
+  if (dureeTournee && sessionData) {
+    const heureDebut = sessionData.heure_depart || '08:00';
+    const heureFin = formData.heureFinTournee || '18:00';
+    
+    const debut = new Date(`2000-01-01T${heureDebut}`);
+    const fin = new Date(`2000-01-01T${heureFin}`);
+    const diffMs = fin - debut;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+    dureeTournee.textContent = `${diffHours}h${diffMinutes.toString().padStart(2, '0')}`;
+  }
+}
+
+// ========================================
+// 🏁 FINALISATION COMPLÈTE
+// ========================================
+
+function completePhase3() {
+  console.log('🏁 Finalisation de la tournée complète');
+  
+  if (!validateCurrentStep()) {
+    return;
+  }
+  
+  // Afficher un message de confirmation
+  if (!confirm('🏁 Êtes-vous sûr de vouloir finaliser la tournée complète ?\n\nToutes les données seront consolidées et la session sera terminée.')) {
+    return;
+  }
+  
+  // Sauvegarder une dernière fois
+  saveFormData();
+  
+  // Préparer les données finales
+  const finalData = {
+    sessionId: localStorage.getItem('currentSessionId'),
+    ...formData,
+    photos: photos,
+    timestamp: new Date().toISOString(),
+    phase: 'phase3_complete'
+  };
+  
+  console.log('📤 Envoi des données finales:', finalData);
+  
+  // Afficher l'indicateur de chargement
+  showLoading('Finalisation de la tournée...');
+  
+  // Envoyer vers Google Sheets
+  google.script.run
+    .withSuccessHandler(onPhase3Success)
+    .withFailureHandler(onPhase3Error)
+    .savePhase3Data(finalData);
+}
+
+function onPhase3Success(result) {
+  console.log('✅ Phase 3 terminée avec succès:', result);
+  hideLoading();
+  
+  // Nettoyer le localStorage
+  localStorage.removeItem('phase3_data');
+  localStorage.removeItem('phase3_photos');
+  localStorage.removeItem('currentSessionId');
+  
+  // Afficher le message de succès
+  showSuccessMessage('🎉 Tournée finalisée avec succès !', result.url || '');
+}
+
+function onPhase3Error(error) {
+  console.error('❌ Erreur Phase 3:', error);
+  hideLoading();
+  
+  // Sauvegarder en mode hors ligne
+  saveOfflineData();
+  alert('❌ Erreur de connexion. Les données sont sauvegardées localement et seront envoyées dès que la connexion sera rétablie.');
+}
+
+// ========================================
+// 🔌 GESTION HORS LIGNE
+// ========================================
+
+function checkConnection() {
+  const indicator = document.getElementById('connectionStatus');
+  
+  if (navigator.onLine) {
+    indicator.className = 'offline-indicator online';
+    indicator.textContent = '🟢 En ligne';
+  } else {
+    indicator.className = 'offline-indicator offline';
+    indicator.textContent = '🔴 Hors ligne';
+  }
+}
+
+function saveOfflineData() {
+  const offlineData = {
+    sessionId: localStorage.getItem('currentSessionId'),
+    phase: 'phase3',
+    data: formData,
+    photos: photos,
+    timestamp: new Date().toISOString()
+  };
+  
+  // Sauvegarder dans le localStorage
+  const existingOffline = JSON.parse(localStorage.getItem('offlineData') || '[]');
+  existingOffline.push(offlineData);
+  localStorage.setItem('offlineData', JSON.stringify(existingOffline));
+  
+  // Afficher l'indicateur
+  const pendingIndicator = document.getElementById('pendingIndicator');
+  pendingIndicator.style.display = 'block';
+  
+  console.log('💾 Données sauvegardées hors ligne');
+}
+
+// ========================================
+// 🎨 INTERFACE UTILISATEUR
+// ========================================
+
+function showLoading(message = 'Chargement...') {
+  // Créer ou afficher l'overlay de chargement
+  let loadingOverlay = document.getElementById('loadingOverlay');
+  if (!loadingOverlay) {
+    loadingOverlay = document.createElement('div');
+    loadingOverlay.id = 'loadingOverlay';
+    loadingOverlay.innerHTML = `
+      <div class="loading-content">
+        <div class="loading"></div>
+        <p id="loadingMessage">${message}</p>
+      </div>
+    `;
+    loadingOverlay.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); display: flex; align-items: center;
+      justify-content: center; z-index: 10000; color: white;
+    `;
+    document.body.appendChild(loadingOverlay);
+  } else {
+    document.getElementById('loadingMessage').textContent = message;
+    loadingOverlay.style.display = 'flex';
+  }
+}
+
+function hideLoading() {
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  if (loadingOverlay) {
+    loadingOverlay.style.display = 'none';
+  }
+}
+
+function showSuccessMessage(message, url = '') {
+  // Masquer tous les steps
+  document.querySelectorAll('.step').forEach(step => {
+    step.style.display = 'none';
+  });
+  
+  // Créer le message de succès
+  const container = document.querySelector('.form-container');
+  container.innerHTML = `
+    <div class="success-message">
+      <div class="success-icon">🎉</div>
+      <h2>Tournée Finalisée !</h2>
+      <p>${message}</p>
+      ${url ? `<p><strong>Lien vers les données:</strong> <a href="${url}" target="_blank">${url}</a></p>` : ''}
+      <div class="success-actions">
+        <button class="btn btn-primary" onclick="window.location.href='https://script.google.com/macros/s/AKfycbwzKW0vQGiKkTmqmr5mAAiC-QQFCrN2M2e5_1LaDa_NQYbxHQIIGZGNV3tMZpBwB1F_/exec?phase=1'">
+          🚛 Nouvelle Tournée
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function updateDisplay() {
+  // Mettre à jour l'affichage général
+  console.log('🎨 Mise à jour de l\'affichage');
+}
+
+// ========================================
+// 🛠️ FONCTIONS UTILITAIRES
+// ========================================
+
+// Navigation vers l'accueil
+function goToHome() {
+  if (confirm('🏠 Retourner à l\'accueil ?\n\nLes données de cette session seront sauvegardées localement.')) {
+    const homeUrl = 'https://script.google.com/macros/s/AKfycbzm4fmWu41vXRFJLnJQSWXNlGxxDwhue73q0rDVjV1xsk-rl47vE1kq0tLep1Q2nz3D/exec';
+    
+    console.log('🏠 Retour accueil:', homeUrl);
+    window.location.href = homeUrl;
+  }
+}
+
+// Écouteurs d'événements pour la connexion
+window.addEventListener('online', checkConnection);
+window.addEventListener('offline', checkConnection);
+
+// Debug
+window.debugPhase3 = function() {
+  console.log('🔍 DEBUG PHASE 3');
+  console.log('Step actuel:', currentStep);
+  console.log('Données formulaire:', formData);
+  console.log('Photos:', photos);
+  console.log('Session:', sessionData);
+};
+
+// Fonction pour forcer l'étape suivante (développement)
+window.forceNextStep = function() {
+  console.log('⚠️ FORCE NEXT STEP (développement uniquement)');
+  currentStep < totalSteps && nextStep();
+};
+</script>

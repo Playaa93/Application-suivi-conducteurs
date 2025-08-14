@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Phase 0 - Identification & Préparatifs</title>
+  <?!= HtmlService.createHtmlOutputFromFile('styles').getContent(); ?>
+</head>
+<body>
+  <!-- Indicateurs de statut -->
+  <div id="connectionStatus" class="offline-indicator online">🟢 En ligne</div>
+  <div id="pendingIndicator" class="pending-indicator">📤 Données en attente</div>
+  
+  <!-- Bouton retour accueil -->
+  <div class="home-button">
+    <button class="btn-home" onclick="goToHome()" title="Retour à l'accueil">
+      🏠 Accueil
+    </button>
+  </div>
+  
+  <div class="form-container">
+    <!-- En-tête -->
+    <div class="header">
+      <h1>🚀 Phase 0 : Identification & Préparatifs</h1>
+      <div class="progress-bar" role="progressbar" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100" aria-label="Progression - Identification">
+        <div class="progress-fill" style="width: 10%"></div>
+      </div>
+      <p class="phase-description">
+        Connexion conducteur • Informations tournée • Sélection véhicules
+      </p>
+    </div>
+    
+    <!-- ÉTAPE 1: Identification Conducteur -->
+    <div class="step active" id="step1">
+      <h2 class="step-title">👤 Identification Conducteur</h2>
+      
+      <div class="info-box">
+        <h3>🔐 Connexion Sécurisée</h3>
+        <p>Saisissez votre code conducteur pour accéder à vos informations personnalisées.</p>
+      </div>
+      
+      <div class="input-group">
+        <label for="codeConducteur" class="required">Code Conducteur</label>
+        <input type="number" id="codeConducteur" placeholder="Ex: 1001" required min="1000" max="9999">
+        <small style="color: #666; font-size: 12px;">4 chiffres fournis par votre responsable</small>
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-primary btn-large" onclick="connectConducteur()">
+          🔐 Se Connecter
+        </button>
+      </div>
+      
+      <!-- Zone d'affichage des informations conducteur -->
+      <div id="conducteurInfo" class="info-box" style="display: none;">
+        <h3>✅ Conducteur Identifié</h3>
+        <div id="conducteurDetails"></div>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 2: Informations Tournée -->
+    <div class="step" id="step2">
+      <h2 class="step-title">📅 Informations Tournée</h2>
+      
+      <div class="input-group">
+        <label for="dateTournee" class="required">Date de la tournée</label>
+        <input type="date" id="dateTournee" required>
+        <small style="color: #666; font-size: 12px;">Date du jour par défaut</small>
+      </div>
+      
+      <div class="input-group">
+        <label for="heureDepartPrevue" class="required">Heure de départ prévue</label>
+        <input type="time" id="heureDepartPrevue" required>
+        <small style="color: #666; font-size: 12px;">Heure prévue de départ du site</small>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Type de tour</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="tour1" name="typeTour" value="1er Tour" required>
+            <label for="tour1">1er Tour</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="tour2" name="typeTour" value="2ème Tour">
+            <label for="tour2">2ème Tour</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Cycle de travail</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="cycleJour" name="cycleTravail" value="Jour" required>
+            <label for="cycleJour">Jour</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="cycleNuit" name="cycleTravail" value="Nuit">
+            <label for="cycleNuit">Nuit</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Type de livraison</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="typeSec" name="typeLivraison" value="Sec" required>
+            <label for="typeSec">Sec</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="typeFrais" name="typeLivraison" value="Frais">
+            <label for="typeFrais">Frais</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="typeSurgele" name="typeLivraison" value="Surgelé">
+            <label for="typeSurgele">Surgelé</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="magasinsPrevu">Magasins prévus (optionnel)</label>
+        <textarea id="magasinsPrevu" rows="3" placeholder="Ex: Magasin 1234, Magasin 5678, Ville XYZ..."></textarea>
+        <small style="color: #666; font-size: 12px;">Liste ou description des magasins à livrer</small>
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-primary" onclick="nextStep()">Sélection Véhicules →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 3: Sélection Véhicules -->
+    <div class="step" id="step3">
+      <h2 class="step-title">🚛 Sélection Véhicules</h2>
+      
+      <div class="info-box">
+        <h3>🎯 Véhicules Filtrés</h3>
+        <p>Les véhicules disponibles sont automatiquement filtrés selon votre site d'affectation et le type de livraison.</p>
+      </div>
+      
+      <div class="input-group">
+        <label for="tracteurSelect" class="required">Tracteur</label>
+        <select id="tracteurSelect" required>
+          <option value="">Chargement des tracteurs disponibles...</option>
+        </select>
+        <small style="color: #666; font-size: 12px;">Tracteurs disponibles pour votre site</small>
+      </div>
+      
+      <div class="input-group">
+        <label for="remorqueSelect" class="required">Remorque</label>
+        <select id="remorqueSelect" required>
+          <option value="">Sélectionnez d'abord un tracteur...</option>
+        </select>
+        <small style="color: #666; font-size: 12px;">Remorques compatibles avec le type de livraison</small>
+      </div>
+      
+      <!-- Résumé de la sélection -->
+      <div id="vehiculesSummary" class="summary-box" style="display: none;">
+        <h3>📋 Véhicules Sélectionnés</h3>
+        <div id="selectedVehicules"></div>
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Précédent</button>
+        <button class="btn btn-primary" onclick="nextStep()">Récapitulatif →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 4: Récapitulatif et Validation -->
+    <div class="step" id="step4">
+      <h2 class="step-title">📋 Récapitulatif Session</h2>
+      
+      <div class="summary-box">
+        <h3>👤 Conducteur</h3>
+        <div id="summaryCondutreur"></div>
+      </div>
+      
+      <div class="summary-box">
+        <h3>📅 Tournée</h3>
+        <div id="summaryTournee"></div>
+      </div>
+      
+      <div class="summary-box">
+        <h3>🚛 Véhicules</h3>
+        <div id="summaryVehicules"></div>
+      </div>
+      
+      <div class="info-box">
+        <h3>🚀 Prêt pour la Prise de Service</h3>
+        <p>Toutes les informations de base sont complétées. Vous allez maintenant passer à la Phase 1 : Prise de Service.</p>
+        <p><strong>Session ID :</strong> <code id="generatedSessionId"></code></p>
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Modifier</button>
+        <button class="btn btn-success btn-large" onclick="startPhase1()">
+          🚛 Commencer la Prise de Service →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <?!= HtmlService.createHtmlOutputFromFile('app-phase0').getContent(); ?>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Phase 2 - Suivi des Livraisons</title>
+  <?!= HtmlService.createHtmlOutputFromFile('styles').getContent(); ?>
+</head>
+<body>
+  <!-- Indicateurs de statut -->
+  <div id="connectionStatus" class="offline-indicator online">🟢 En ligne</div>
+  <div id="pendingIndicator" class="pending-indicator">📤 Données en attente</div>
+  
+  <!-- Bouton retour accueil -->
+  <div class="home-button">
+    <button class="btn-home" onclick="goToHome()" title="Retour à l'accueil">
+      🏠 Accueil
+    </button>
+  </div>
+  
+  <!-- Info session -->
+  <div id="sessionInfo" class="session-info">
+    <div id="sessionText">Session: Chargement...</div>
+  </div>
+  
+  <div class="form-container">
+    <!-- En-tête -->
+    <div class="header">
+      <h1>🚛 Phase 2 : Suivi des Livraisons</h1>
+      <div class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" aria-label="Progression - Suivi des Livraisons">
+        <div class="progress-fill" style="width: 50%"></div>
+      </div>
+      <p class="phase-description">
+        Informations générales • Livraisons par magasin • Validation temps réel
+      </p>
+    </div>
+    
+    <!-- ÉTAPE 1: Informations générales du suivi -->
+    <div class="step active" id="step1">
+      <h2 class="step-title">📋 Informations Générales</h2>
+      
+      <div class="input-group">
+        <label for="dateDepart" class="required">Date de départ</label>
+        <input type="date" id="dateDepart" required>
+        <small style="color: #666; font-size: 12px;">Format JJ/MM/AAAA</small>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Cycle (jour ou nuit)</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="cycleJour" name="cycle" value="Jour" required>
+            <label for="cycleJour">Jour</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="cycleNuit" name="cycle" value="Nuit">
+            <label for="cycleNuit">Nuit</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label class="required">Type</label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" id="typeSec" name="typeLivraison" value="Sec" required>
+            <label for="typeSec">Sec</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="typeFrais" name="typeLivraison" value="Frais">
+            <label for="typeFrais">Frais</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" id="typeSurgele" name="typeLivraison" value="Surgelé">
+            <label for="typeSurgele">Surgelé</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="siteChargement" class="required">Site de chargement</label>
+        <select id="siteChargement" required>
+          <option value="">Sélectionner le site...</option>
+          <option value="LIDL - Coudray">LIDL - Coudray</option>
+          <option value="LIDL - Chanteloup">LIDL - Chanteloup</option>
+          <option value="ITM - Normandie">ITM - Normandie</option>
+          <option value="STG">STG</option>
+          <option value="ITM - PMS">ITM - PMS</option>
+          <option value="LIDL - Barbery">LIDL - Barbery</option>
+          <option value="LIDL - Meaux">LIDL - Meaux</option>
+          <option value="ITM - Bourges">ITM - Bourges</option>
+        </select>
+      </div>
+      
+      <div class="input-group">
+        <label for="nomConducteur" class="required">Nom du Conducteur</label>
+        <input type="text" id="nomConducteur" placeholder="Nom et prénom du conducteur" required>
+      </div>
+      
+      <div class="input-group">
+        <label for="heureDepartPrevue" class="required">Heure de départ prévue</label>
+        <input type="time" id="heureDepartPrevue" required>
+      </div>
+      
+      <div class="input-group">
+        <label for="magasinsALivrer" class="required">Magasins à Livrer</label>
+        <textarea id="magasinsALivrer" rows="3" placeholder="Renseignez les numéros de magasins ou la ville de votre tour" required></textarea>
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="goBackToPhase1()">← Retour Phase 1</button>
+        <button class="btn btn-primary" onclick="startMagasinEntry()">Commencer les Livraisons →</button>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 2: Interface dynamique des magasins -->
+    <div class="step" id="step2">
+      <h2 class="step-title">🏪 Livraisons par Magasin</h2>
+      
+      <!-- Compteur de magasins -->
+      <div class="magasin-counter">
+        <span class="counter-text">Magasin</span>
+        <span class="counter-number" id="currentMagasinNumber">1</span>
+        <span class="counter-total">sur</span>
+        <span class="counter-total-number" id="totalMagasins">?</span>
+        <span class="phase-counter" id="magasinStatus">En cours</span>
+      </div>
+      
+      <!-- Formulaire magasin dynamique -->
+      <div id="magasinForm">
+        <div class="input-group">
+          <label for="nomMagasin" class="required">Nom du magasin</label>
+          <input type="text" id="nomMagasin" placeholder="Nom ou numéro du magasin" required>
+        </div>
+        
+        <div class="input-group">
+          <label class="required">Statut de la livraison</label>
+          <div class="radio-group">
+            <div class="radio-item">
+              <input type="radio" id="statutLivre" name="statutLivraison" value="Livré" required>
+              <label for="statutLivre">Livré</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="statutPartiel" name="statutLivraison" value="Partiellement livré">
+              <label for="statutPartiel">Partiellement livré</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="statutNonLivre" name="statutLivraison" value="Non livré">
+              <label for="statutNonLivre">Non livré</label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="input-group">
+          <label for="detailsLivraison">Détails de la livraison</label>
+          <textarea id="detailsLivraison" rows="3" placeholder="Si partiellement ou non livré, précisez pourquoi"></textarea>
+        </div>
+        
+        <div class="input-group">
+          <label class="required">Reprises de Contenants Vides</label>
+          <div class="radio-group">
+            <div class="radio-item">
+              <input type="radio" id="reprisesOui" name="reprisesContenants" value="Oui" required>
+              <label for="reprisesOui">Oui</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="reprisesNon" name="reprisesContenants" value="Non">
+              <label for="reprisesNon">Non</label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="input-group">
+          <label for="anomalies">Anomalies rencontrées</label>
+          <textarea id="anomalies" rows="3" placeholder="Décrivez toute anomalie rencontrée"></textarea>
+        </div>
+        
+        <div class="input-group">
+          <label class="required">Photo des Reprises ou Anomalies</label>
+          <div class="photo-input" onclick="takePhoto('magasinPhoto')">
+            <div class="photo-icon">📸</div>
+            <div class="photo-text">Photo reprises/anomalies</div>
+            <div class="photo-subtext">Si pas de reprises: photo espace stockage vides</div>
+            <input type="file" id="photoMagasinPhoto" accept="image/*" capture="environment" style="display:none">
+          </div>
+          <img id="previewMagasinPhoto" class="photo-preview" style="display:none">
+        </div>
+      </div>
+      
+      <!-- Actions magasin -->
+      <div class="magasin-actions">
+        <div class="navigation-buttons">
+          <button class="btn btn-secondary" id="btnPreviousMagasin" onclick="previousMagasin()" style="display:none">← Magasin Précédent</button>
+          <button class="btn btn-success" id="btnValidateMagasin" onclick="validateCurrentMagasin()">✅ Valider ce Magasin</button>
+          <button class="btn btn-primary" id="btnNextMagasin" onclick="nextMagasin()" style="display:none">Magasin Suivant →</button>
+        </div>
+        
+        <div class="secondary-actions">
+          <button class="btn btn-secondary" onclick="addAnotherMagasin()">+ Ajouter un Magasin</button>
+          <button class="btn btn-warning" onclick="finishDeliveries()" id="btnFinishDeliveries" style="display:none">🏁 Terminer les Livraisons</button>
+        </div>
+      </div>
+      
+      <!-- Résumé des magasins validés -->
+      <div id="magasinsValidated" class="validated-summary" style="display:none">
+        <h3>📋 Magasins Validés</h3>
+        <div id="validatedList"></div>
+      </div>
+    </div>
+    
+    <!-- ÉTAPE 3: Récapitulatif et finalisation -->
+    <div class="step" id="step3">
+      <h2 class="step-title">📊 Récapitulatif des Livraisons</h2>
+      
+      <div class="summary-box">
+        <h3>🚛 Informations Générales</h3>
+        <div id="generalSummary"></div>
+      </div>
+      
+      <div class="summary-box">
+        <h3>🏪 Magasins Livrés</h3>
+        <div id="magasinsSummary"></div>
+      </div>
+      
+      <div class="stats-box">
+        <div class="stat-item">
+          <span class="stat-number" id="totalMagasinsCount">0</span>
+          <span class="stat-label">Magasins</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="livresCount">0</span>
+          <span class="stat-label">Livrés</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="photosCount">0</span>
+          <span class="stat-label">Photos</span>
+        </div>
+      </div>
+      
+      <div class="navigation-buttons">
+        <button class="btn btn-secondary" onclick="backToMagasins()">← Modifier Magasins</button>
+        <button class="btn btn-success" onclick="completePhase2()">
+          ✅ Envoyer les Livraisons
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <?!= HtmlService.createHtmlOutputFromFile('app-phase2').getContent(); ?>
+</body>
+</html>
