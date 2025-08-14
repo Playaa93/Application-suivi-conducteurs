@@ -78,27 +78,30 @@ function getSheets() {
 
 function checkAndFixHeaders(sheets) {
   try {
-    // Vérifier Prise_Service
-    if (sheets.priseService.getLastRow() === 0 || isHeadersMissing(sheets.priseService, 'Prise_Service')) {
-      console.log('🔧 Correction en-têtes Prise_Service');
+    // Vérifier Prise_Service - ne corriger que si totalement vide
+    if (sheets.priseService.getLastRow() === 0) {
+      console.log('🔧 Création en-têtes Prise_Service (feuille vide)');
       addHeaders(sheets.priseService, 'Prise_Service');
+    } else if (isHeadersMissing(sheets.priseService, 'Prise_Service')) {
+      console.log('⚠️ En-têtes Prise_Service incomplètes - ajout colonnes manquantes');
+      // Ajouter uniquement les colonnes manquantes sans écraser
     }
     
-    // Vérifier Suivi_Livraisons
-    if (sheets.suiviLivraisons.getLastRow() === 0 || isHeadersMissing(sheets.suiviLivraisons, 'Suivi_Livraisons')) {
-      console.log('🔧 Correction en-têtes Suivi_Livraisons');
+    // Vérifier Suivi_Livraisons - ne corriger que si totalement vide
+    if (sheets.suiviLivraisons.getLastRow() === 0) {
+      console.log('🔧 Création en-têtes Suivi_Livraisons (feuille vide)');
       addHeaders(sheets.suiviLivraisons, 'Suivi_Livraisons');
     }
     
-    // Vérifier Fin_Service
-    if (sheets.finService.getLastRow() === 0 || isHeadersMissing(sheets.finService, 'Fin_Service')) {
-      console.log('🔧 Correction en-têtes Fin_Service');
+    // Vérifier Fin_Service - ne corriger que si totalement vide
+    if (sheets.finService.getLastRow() === 0) {
+      console.log('🔧 Création en-têtes Fin_Service (feuille vide)');
       addHeaders(sheets.finService, 'Fin_Service');
     }
     
-    // Vérifier Sessions
-    if (sheets.sessions.getLastRow() === 0 || isHeadersMissing(sheets.sessions, 'Sessions')) {
-      console.log('🔧 Correction en-têtes Sessions');
+    // Vérifier Sessions - ne corriger que si totalement vide
+    if (sheets.sessions.getLastRow() === 0) {
+      console.log('🔧 Création en-têtes Sessions (feuille vide)');
       addHeaders(sheets.sessions, 'Sessions');
     }
     
@@ -411,36 +414,77 @@ function savePhase1ToSheetsWithUrls(data, photoUrls) {
     const sheets = getSheets();
     const formData = data.formData || data;
     
-    const rowData = [
-      data.sessionId,
-      new Date(),
-      formData.tour || '',
-      formData.siteDepart || '',
-      formData.heureDepart || '',
-      formData.numeroContrat || '',
-      formData.immatTracteur || '',
-      formData.degatsTracteur || '',
-      formData.detailsDegatsTracteur || '',
-      formData.kilometrage || '',
-      formData.commentairesTracteur || '',
-      formData.immatRemorque || '',
-      formData.degatsRemorque || '',
-      formData.detailsDegatsRemorque || '',
-      formData.commentairesRemorque || '',
-      formData.consignes ? 'Oui' : 'Non',
-      formData.heureTopDepart || '',
-      photoUrls.photoCarburant || '',
-      photoUrls.photoFaceAvant || '',
-      photoUrls.photoCoteConducteur || '',
-      photoUrls.photoCotePassager || '',
-      photoUrls.photoCarburantRemorque || '',
-      photoUrls.photoHayon || '',
-      photoUrls.photoRemorqueTableau || '',
-      photoUrls.photoRemorqueConducteur || '',
-      photoUrls.photoRemorquePassager || '',
-      photoUrls.photoChargement || '',
-      photoUrls.photoRemorquePortes || ''
-    ];
+    // 🔍 Détecter la structure actuelle des colonnes
+    const headers = sheets.priseService.getRange(1, 1, 1, sheets.priseService.getLastColumn()).getValues()[0];
+    const hasDetailsColumns = headers.includes('Details_Degats_Tracteur');
+    
+    console.log('📋 Structure détectée:', hasDetailsColumns ? 'NOUVELLE (avec détails)' : 'ANCIENNE (sans détails)');
+    console.log('📋 Headers actuels:', headers.slice(0, 15).join(', '));
+    
+    let rowData;
+    if (hasDetailsColumns) {
+      // Structure NOUVELLE avec colonnes détails
+      rowData = [
+        data.sessionId,
+        new Date(),
+        formData.tour || '',
+        formData.siteDepart || '',
+        formData.heureDepart || '',
+        formData.numeroContrat || '',
+        formData.immatTracteur || '',
+        formData.degatsTracteur || '',
+        formData.detailsDegatsTracteur || '',
+        formData.kilometrage || '',
+        formData.commentairesTracteur || '',
+        formData.immatRemorque || '',
+        formData.degatsRemorque || '',
+        formData.detailsDegatsRemorque || '',
+        formData.commentairesRemorque || '',
+        formData.consignes ? 'Oui' : 'Non',
+        formData.heureTopDepart || '',
+        photoUrls.photoCarburant || '',
+        photoUrls.photoFaceAvant || '',
+        photoUrls.photoCoteConducteur || '',
+        photoUrls.photoCotePassager || '',
+        photoUrls.photoCarburantRemorque || '',
+        photoUrls.photoHayon || '',
+        photoUrls.photoRemorqueTableau || '',
+        photoUrls.photoRemorqueConducteur || '',
+        photoUrls.photoRemorquePassager || '',
+        photoUrls.photoChargement || '',
+        photoUrls.photoRemorquePortes || ''
+      ];
+    } else {
+      // Structure ANCIENNE sans colonnes détails
+      rowData = [
+        data.sessionId,
+        new Date(),
+        formData.tour || '',
+        formData.siteDepart || '',
+        formData.heureDepart || '',
+        formData.numeroContrat || '',
+        formData.immatTracteur || '',
+        formData.degatsTracteur || '',
+        formData.kilometrage || '',
+        formData.commentairesTracteur || '',
+        formData.immatRemorque || '',
+        formData.degatsRemorque || '',
+        formData.commentairesRemorque || '',
+        formData.consignes ? 'Oui' : 'Non',
+        formData.heureTopDepart || '',
+        photoUrls.photoCarburant || '',
+        photoUrls.photoFaceAvant || '',
+        photoUrls.photoCoteConducteur || '',
+        photoUrls.photoCotePassager || '',
+        photoUrls.photoCarburantRemorque || '',
+        photoUrls.photoHayon || '',
+        photoUrls.photoRemorqueTableau || '',
+        photoUrls.photoRemorqueConducteur || '',
+        photoUrls.photoRemorquePassager || '',
+        photoUrls.photoChargement || '',
+        photoUrls.photoRemorquePortes || ''
+      ];
+    }
     
     console.log('📊 Ligne avec URLs complète:', rowData);
     

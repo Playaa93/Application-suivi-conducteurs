@@ -158,16 +158,20 @@
     /* 📱 RESPONSIVE MOBILE-FIRST */
     /* ============================================ */
     
-    /* Desktop adaptatif (gardant focus mobile) */
+    /* Tablette - Mode intermédiaire */
     @media (min-width: 768px) {
       body {
         padding: var(--spacing-xl);
-        max-width: 480px;
+        max-width: 800px; /* Tablette - plus large */
         margin: 0 auto;
       }
       
+      .app-container {
+        max-width: 100%;
+      }
+      
       .btn {
-        max-width: 400px;
+        max-width: 600px;
         margin: var(--spacing-md) auto;
       }
       
@@ -181,6 +185,23 @@
       
       .section-title {
         font-size: 2.25rem;
+      }
+    }
+    
+    /* Desktop - Mode large */
+    @media (min-width: 1024px) {
+      body {
+        max-width: 1000px;
+        padding: var(--spacing-xxl);
+      }
+      
+      .btn {
+        max-width: 500px;
+      }
+      
+      .form-group {
+        max-width: 600px;
+        margin: 0 auto var(--spacing-lg) auto;
       }
     }
     
@@ -727,6 +748,16 @@
       background: var(--bg-tertiary);
     }
     
+    /* Inputs readonly - style spécial */
+    .form-group input[readonly],
+    .form-group textarea[readonly] {
+      background: var(--bg-secondary) !important;
+      color: var(--text-secondary) !important;
+      border-color: var(--border-secondary) !important;
+      cursor: default;
+      opacity: 1; /* Forcer l'opacité */
+    }
+    
     /* Placeholder mobile-friendly */
     .form-group input::placeholder,
     .form-group textarea::placeholder {
@@ -744,14 +775,15 @@
     
     .radio-group {
       display: grid;
-      gap: var(--spacing-sm);
+      gap: var(--spacing-md); /* Plus d'espace entre options */
+      width: 100%;
     }
     
     .radio-option {
       display: flex;
       align-items: center;
-      gap: var(--spacing-md);
-      padding: var(--spacing-lg) var(--spacing-md);
+      gap: var(--spacing-lg); /* Plus d'espace entre radio et texte */
+      padding: var(--spacing-lg) var(--spacing-xl); /* Plus de padding horizontal */
       background: var(--bg-input);
       border: 2px solid var(--border-primary);
       border-radius: var(--radius-lg);
@@ -760,6 +792,7 @@
       min-height: 56px; /* Touch-friendly height */
       position: relative;
       font-family: 'Inter', sans-serif;
+      width: 100%; /* Assurer largeur complète */
     }
     
     .radio-option:hover {
