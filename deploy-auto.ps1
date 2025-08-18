@@ -38,7 +38,7 @@ git push
 
 # Deploy to Google Apps Script with specific deployment ID
 Write-Host "Deploying to Google Apps Script..." -ForegroundColor Yellow
-clasp deploy -i AKfycbzILs06HoTemgcbo3O-Y-0Sg2eFepJJ1XfFDVDMJvr0Wu4pMNuKLmarAQywiX3FYBqOEw
+clasp deploy -i AKfycbzm4fmWu41vXRFJLnJQSWXNlGxxDwhue73q0rDVjV1xsk-rl47vE1kq0tLep1Q2nz3D
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "Everything deployed successfully!" -ForegroundColor Green
