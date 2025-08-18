@@ -1,0 +1,178 @@
+version: 1
+
+project:
+  name: Suivi Conducteurs SPA + Google Apps Script
+  description: >-
+    Application SPA mobile-first de suivi des conducteurs (Phases 0-3) avec backend Google Apps Script.
+    Persistance Google Sheets, photos sur Google Drive, et sauvegarde locale via localStorage.
+  languages:
+    - html
+    - css
+    - javascript
+    - google-apps-script
+
+entrypoints:
+  # Frontend SPA
+  - id: spa
+    path: index-spa.html
+    kind: frontend
+    description: SPA unique gérant les Phases 0 (connexion + véhicules) à 3.
+  # Backend Apps Script
+  - id: gas
+    path: Code.js
+    kind: backend
+    description: Fonctions HTTP Apps Script, intégrations Sheets/Drive, et utilitaires.
+
+contexts:
+  include:
+    - index-spa.html
+    - Code.js
+    - appsscript.json
+    - index.html
+    - index-home.html
+    - index-home-clean.html
+    - index-phase0.html
+    - index-phase1.html
+    - index-phase2.html
+    - index-phase3.html
+    - app.html
+    - app-phase0.html
+    - app-phase1.html
+    - app-phase2.html
+    - app-phase3.html
+    - styles.html
+    - codex.md
+    - debug-sessions.html
+  exclude:
+    - "**/*.docx"
+    - "**/.clasp.json"  # contient des IDs sensibles
+    - "**/node_modules/**"
+
+runtime:
+  frontend:
+    type: browser
+    storage:
+      - localStorage: [sessionData, phase0_data, phase1_data, phase2_data, phase3_data, phase3_minimal, phase3_photos_uploaded]
+  backend:
+    type: google-apps-script
+    webapp: true
+    limits:
+      - maxExecutionMinutes: 6
+    sheets:
+      # Noms logiques; les ID/URL sont gérés côté Apps Script
+      - Prise_Service
+      - Suivi_Livraisons
+      - Fin_Service
+
+features:
+  phases:
+    - id: phase0
+      name: Connexion + Sélection véhicules
+      frontend:
+        key_fields: [codeConducteur, date, heure, typeTour, typeLivraison, immatTracteur, immatRemorque]
+      backend:
+        functions: [doGet, savePhase0Data]
+    - id: phase1
+      name: Prise de service (6 étapes)
+      frontend:
+        steps: [carburant, tracteur, remorque, chargement, recap, finalisation]
+        photos: [photoCarburant, photoCarburantRemorque, photoHayon, photoRemorquePortes, photoChargement]
+      backend:
+        functions: [savePhase1Data, savePhotosToDrive, savePhase1ToSheetsWithUrls]
+    - id: phase2
+      name: Suivi livraisons
+      frontend:
+        entities: [livraison]
+        photos: [photoMagasin, photoReprises, photoAnomalies]
+      backend:
+        functions: [saveSingleMagasin]
+    - id: phase3
+      name: Fin de service
+      frontend:
+        key_fields: [heureRetour, kilometrageFinal, confirmation, commentaires]
+        photos: [finService_*]
+      backend:
+        functions: [savePhase3Data, savePhotosToDrive]
+
+data_flow:
+  photos:
+    encoding: base64_data_url
+    transport: google.script.run -> Apps Script -> Drive file URL
+    keys_frontend: generated per input; may include suffix for multiples (e.g., photoCarburant_2)
+    order_of_operations:
+      - collect_frontend
+      - upload_to_drive
+      - save_sheet_with_urls
+  sheets:
+    mapping_notes: >-
+      Le backend s'adapte aux en-têtes existants; il vérifie et ajuste la ligne à insérer.
+      Les nouvelles colonnes supportées incluent Details_Degats_Tracteur/Remorque et commentaires livraison.
+
+quality_rules:
+  code_style:
+    - verbose_and_readable: true
+    - avoid_deep_nesting: true
+    - early_returns: true
+  ui_ux:
+    - font: Inter
+    - mobile_first: true
+    - radio_touch_targets: enlarged
+  data_prefs:
+    - fuel_values_decimals: 3
+    - prices_label: HT
+
+commands:
+  deploy:
+    # Eviter PowerShell; utiliser clasp directement
+    - name: push
+      run: clasp push
+    - name: deploy
+      run: "clasp deploy -i AKfycbzILs06HoTemgcbo3O-Y-0Sg2eFepJJ1XfFDVDMJvr0Wu4pMNuKLmarAQywiX3FYBqOEw"
+  test:
+    - name: gas_self_tests
+      run: echo "Exécuter runAllTests() depuis l'éditeur Apps Script si disponible"
+
+navigation:
+  spa_sections:
+    - home
+    - phase0
+    - phase1
+    - phase2
+    - phase3
+  scroll_to_top_on_nav: true
+
+resilience:
+  offline:
+    - localStorage_try_catch_on_quota
+    - aggressive_cleanup_before_phase3
+  concurrency:
+    - apps_script_variable: processingPhase1
+    - description: Protège les écritures concurrentes en Phase 1
+
+observability:
+  logging:
+    frontend:
+      - verbose_boot_logs: true
+      - per_step_save_logs: true
+      - photo_upload_logs: true
+    backend:
+      - doGet_params
+      - savePhaseX_received_payloads
+      - drive_upload_traces
+
+maintenance:
+  known_risks:
+    - localStorage_quota_exceeded_if_base64_not_cleaned
+    - template_literals_in_html_can_break_gas_served_js
+  mitigations:
+    - cleanup_large_photo_data_before_save
+    - replace_template_literals_in_served_scripts
+
+ownership:
+  stakeholders:
+    - role: owner
+      name: HZ
+    - role: assistant
+      name: Codex
+
+
