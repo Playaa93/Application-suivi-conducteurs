@@ -1,22 +1,17 @@
 {
     "version": "2.0.0",
     "tasks": [
-      {
-        "label": "Deploy automatique",
-        "type": "shell",
-        // lance PowerShell avec notre script
-        "command": "powershell.exe",
-        "args": [
-          "-NoProfile",
-          "-ExecutionPolicy", "Bypass",
-          "-File", "${workspaceFolder}\\deploy-auto.ps1"
-        ],
-        "presentation": {
-          "echo": true,
-          "reveal": "always",
-          "panel": "shared"
+        {
+            "label": "🚀 Deploy All",
+            "type": "shell",
+            "command": "powershell",
+            "args": ["-ExecutionPolicy", "Bypass", "-File", "./deploy-auto.ps1"],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
         }
-      }
     ]
-  }
-  
+}
